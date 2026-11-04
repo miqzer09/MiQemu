@@ -1,8 +1,13 @@
 package com.omnidroid.app.mobile.shared.compose.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,12 +16,19 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -63,11 +76,26 @@ fun OmnidroidGameCard(
     showTitles: Boolean = true,
     infoStyle: GameCardInfoStyle = GameCardInfoStyle.OVERLAY,
     fillCard: Boolean = false,
-    cornerRadius: androidx.compose.ui.unit.Dp = 4.dp,
+    cornerRadius: androidx.compose.ui.unit.Dp = 12.dp,
     onClick: () -> Unit = { },
     onLongClick: () -> Unit = { },
 ) {
     val cardShape = RoundedCornerShape(cornerRadius)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    LaunchedEffect(isFocused) {
+        if (isFocused) {
+            YunoSoundManager.playClick()
+        }
+    }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.04f else 1.0f,
+        animationSpec = tween(180),
+        label = "cardScale",
+    )
+
     if (fillCard && infoStyle == GameCardInfoStyle.BELOW) {
         CaptionBelowGameCard(
             modifier = modifier,
@@ -84,15 +112,25 @@ fun OmnidroidGameCard(
     Surface(
         modifier =
             modifier
-                .controllerFocusGlow(cardShape)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .controllerFocusGlow(cardShape, strokeWidth = 3.dp, glowWidth = 8.dp)
                 .reportControllerGame(game)
                 .combinedClickable(
-                    onClick = onClick,
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = {
+                        YunoSoundManager.playEnter()
+                        onClick()
+                    },
                     onLongClick = onLongClick,
                 ),
         shape = cardShape,
         color = Color(0xFF161616),
-        shadowElevation = 4.dp,
+        border = if (isFocused) BorderStroke(3.dp, YunoPurplePrimary) else BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+        shadowElevation = if (isFocused) 16.dp else 4.dp,
         tonalElevation = 0.dp,
     ) {
         Box(modifier = if (fillCard) Modifier.fillMaxSize() else Modifier.fillMaxWidth()) {
@@ -110,6 +148,24 @@ fun OmnidroidGameCard(
                 infoStyle = infoStyle,
                 showTitles = showTitles,
             )
+            if (game.isFavorite) {
+                Box(
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                            .size(24.dp)
+                            .background(YunoFavoriteRed, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Favorite",
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp),
+                    )
+                }
+            }
         }
     }
 }

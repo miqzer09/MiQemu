@@ -48,11 +48,15 @@ fun PadKitScope.NESRight(
                     persistentListOf(
                         Id.Key(KeyEvent.KEYCODE_BUTTON_A),
                         Id.Key(KeyEvent.KEYCODE_BUTTON_B),
+                        Id.Key(KeyEvent.KEYCODE_BUTTON_Y),
+                        Id.Key(KeyEvent.KEYCODE_BUTTON_X),
                     ),
                 idsForegrounds =
                     persistentMapOf<Id.Key, @Composable (State<Boolean>) -> Unit>(
                         Id.Key(KeyEvent.KEYCODE_BUTTON_A) to { OmnidroidButtonForeground(pressed = it, label = "A") },
                         Id.Key(KeyEvent.KEYCODE_BUTTON_B) to { OmnidroidButtonForeground(pressed = it, label = "B") },
+                        Id.Key(KeyEvent.KEYCODE_BUTTON_Y) to { OmnidroidButtonForeground(pressed = it, label = "TB") },
+                        Id.Key(KeyEvent.KEYCODE_BUTTON_X) to { OmnidroidButtonForeground(pressed = it, label = "TA") },
                     ),
             )
         },

@@ -75,8 +75,6 @@ fun SystemStatusIndicators(
     modifier: Modifier = Modifier,
     gamepadConnected: Boolean = false,
 ) {
-    val battery = rememberBatteryStatus()
-    val connection = rememberConnectionStatus()
     val clock = rememberCurrentTime()
 
     Row(
@@ -84,7 +82,6 @@ fun SystemStatusIndicators(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        ConnectionStatusIcon(connection)
         if (gamepadConnected) {
             Icon(
                 imageVector = Icons.Filled.SportsEsports,
@@ -93,7 +90,6 @@ fun SystemStatusIndicators(
                 tint = LocalContentColor.current.copy(alpha = StatusMutedAlpha),
             )
         }
-        BatteryStatusIcon(battery)
         Text(
             text = clock,
             style =

@@ -1,6 +1,7 @@
 package com.omnidroid.lib.core
 
 import android.content.SharedPreferences
+import com.omnidroid.lib.library.CoreID
 import com.omnidroid.lib.library.SystemCoreConfig
 import com.omnidroid.lib.library.SystemID
 import dagger.Lazy
@@ -18,8 +19,74 @@ class CoreVariablesManager(private val sharedPreferences: Lazy<SharedPreferences
         val coreVariablesMap = (defaultMap + convertCoreVariablesToMap(coreVariables)).toMutableMap()
 
         if (systemID == SystemID.N64) {
-            val res43 = coreVariablesMap["mupen64plus-43screensize"] ?: "320x240"
+            coreVariablesMap["mupen64plus-GLideN64IniBehaviour"] = "early"
+            coreVariablesMap["mupen64plus-aspect"] = coreVariables.find { it.key == "mupen64plus-aspect" }?.value ?: "16:9 adjusted"
+            val res43 = coreVariablesMap["mupen64plus-43screensize"] ?: "640x480"
+            coreVariablesMap["mupen64plus-43screensize"] = res43
             coreVariablesMap["mupen64plus-169screensize"] = mapN64To169Resolution(res43)
+            coreVariablesMap["mupen64plus-cpucore"] = "dynamic_recompiler"
+            coreVariablesMap["mupen64plus-rdp-plugin"] = "gliden64"
+            coreVariablesMap["mupen64plus-rsp-plugin"] = "hle"
+            coreVariablesMap["mupen64plus-MaxTxCacheSize"] = "8000"
+            coreVariablesMap["mupen64plus-EnableTextureCache"] = "False"
+            coreVariablesMap["mupen64plus-EnableEnhancedTextureStorage"] = "False"
+            coreVariablesMap["mupen64plus-EnableEnhancedHighResStorage"] = "False"
+            coreVariablesMap["mupen64plus-txCacheCompression"] = "True"
+            coreVariablesMap["mupen64plus-ThreadedRenderer"] = "False"
+            coreVariablesMap["mupen64plus-EnableFBEmulation"] = "False"
+            coreVariablesMap["mupen64plus-EnableCopyColorToRDRAM"] = "Off"
+            coreVariablesMap["mupen64plus-EnableCopyDepthToRDRAM"] = "Off"
+            coreVariablesMap["mupen64plus-EnableCopyAuxToRDRAM"] = "False"
+            coreVariablesMap["mupen64plus-EnableCopyColorFromRDRAM"] = "False"
+            coreVariablesMap["mupen64plus-EnableLegacyBlending"] = "True"
+            coreVariablesMap["mupen64plus-BilinearMode"] = "standard"
+            coreVariablesMap["mupen64plus-HybridFilter"] = "False"
+            coreVariablesMap["mupen64plus-DitheringPattern"] = "False"
+            coreVariablesMap["mupen64plus-DitheringQuantization"] = "False"
+            coreVariablesMap["mupen64plus-RDRAMImageDitheringMode"] = "False"
+            coreVariablesMap["mupen64plus-FXAA"] = "0"
+            coreVariablesMap["mupen64plus-MultiSampling"] = "0"
+            coreVariablesMap["mupen64plus-FrameDuping"] = "False"
+            coreVariablesMap["mupen64plus-Framerate"] = "Original"
+            coreVariablesMap["mupen64plus-virefresh"] = "Auto"
+            coreVariablesMap["mupen64plus-EnableLODEmulation"] = "False"
+            coreVariablesMap["mupen64plus-EnableN64DepthCompare"] = "False"
+            coreVariablesMap["mupen64plus-EnableHWLighting"] = "False"
+            coreVariablesMap["mupen64plus-CorrectTexrectCoords"] = "Off"
+            coreVariablesMap["mupen64plus-EnableTexCoordBounds"] = "False"
+            coreVariablesMap["mupen64plus-EnableInaccurateTextureCoordinates"] = "False"
+            coreVariablesMap["mupen64plus-BackgroundMode"] = "OnePiece"
+            coreVariablesMap["mupen64plus-EnableNativeResTexrects"] = "False"
+            coreVariablesMap["mupen64plus-txFilterMode"] = "None"
+            coreVariablesMap["mupen64plus-txEnhancementMode"] = "None"
+            coreVariablesMap["mupen64plus-txFilterIgnoreBG"] = "True"
+            coreVariablesMap["mupen64plus-txHiresEnable"] = "False"
+            coreVariablesMap["mupen64plus-txHiresFullAlphaChannel"] = "False"
+            coreVariablesMap["mupen64plus-MaxHiResTxVramLimit"] = "0"
+        } else if (systemID == SystemID.NES) {
+            if (!coreVariablesMap.containsKey("fceumm_turbo_enable")) {
+                coreVariablesMap["fceumm_turbo_enable"] = "Both"
+            }
+            if (!coreVariablesMap.containsKey("fceumm_turbo_delay")) {
+                coreVariablesMap["fceumm_turbo_delay"] = "3"
+            }
+        } else if (systemID == SystemID.PSX) {
+            // High Definition (HD) 2x internal resolution with texture alignment fix and no glitchy speed hacks
+            coreVariablesMap["pcsx_rearmed_neon_enhancement_enable"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_neon_enhancement_tex_adj_v2"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_neon_enhancement_no_main"] = "disabled"
+            coreVariablesMap["pcsx_rearmed_neon_interlace_enable_v2"] = "disabled"
+            coreVariablesMap["pcsx_rearmed_dithering"] = "disabled"
+            coreVariablesMap["pcsx_rearmed_rgb32_output"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_drc"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_scale_hires"] = "disabled"
+            coreVariablesMap["pcsx_rearmed_spu_thread"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_gpu_thread_rendering"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_spu_interpolation"] = "cubic"
+            coreVariablesMap["pcsx_rearmed_spu_reverb"] = "enabled"
+            coreVariablesMap["pcsx_rearmed_cd_readahead"] = "1024"
+            coreVariablesMap["pcsx_rearmed_psxclock"] = "70"
+            coreVariablesMap["pcsx_rearmed_aspect_ratio"] = "16:9"
         }
 
         return convertMapToCoreVariables(coreVariablesMap)

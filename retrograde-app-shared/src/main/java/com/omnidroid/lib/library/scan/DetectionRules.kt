@@ -223,7 +223,7 @@ object DetectionRules {
             ?: return Detection.Rejected("Cue sheet has no data track")
         val bin = input.openNamed(track) ?: return Detection.Rejected("Cue data track $track is missing")
         bin.use { identifyFlat(it, input.name, 0)?.let { return it } }
-        return Detection.Rejected("Cue data track was not a recognised disc")
+        return folderOrReject(input, "Cue data track was not a recognised disc")
     }
 
     private fun chd(input: ScanInput): Detection {

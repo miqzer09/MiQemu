@@ -234,6 +234,7 @@ class BaseGameScreenViewModel(
     fun refreshSettings() {
         touchControls.refreshLayout()
         retroGameView.refreshCoreVariables()
+        retroGameView.retroGameView?.refreshAspectRatio()
     }
 
     fun isTouchControllerVisible(): Flow<Boolean> {
@@ -307,6 +308,11 @@ class BaseGameScreenViewModel(
                 Timber.e(e, "Error in reset")
             }
         }
+
+    fun showMenu() {
+        if (loadingState.value) return
+        sideEffects.showMenu(tilt, inputs)
+    }
 
     fun requestFinish() {
         if (loadingState.value) return

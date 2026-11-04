@@ -1,5 +1,12 @@
 package com.omnidroid.app.utils.android.settings
 
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,8 +163,13 @@ fun OmnidroidSettingsSlider(
         )
     val colors = if (enabled) defaultColors else disabledColors
 
+    val focusManager = LocalFocusManager.current
+
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .controllerFocusGlow(RoundedCornerShape(8.dp)),
     ) {
         ListItem(
             headlineContent = title,
@@ -174,7 +186,23 @@ fun OmnidroidSettingsSlider(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                    .onPreviewKeyEvent { event ->
+                        if (enabled && (event.key == Key.DirectionDown || event.key == Key.DirectionUp)) {
+                            if (event.type == KeyEventType.KeyDown) {
+                                val direction =
+                                    if (event.key == Key.DirectionDown) {
+                                        FocusDirection.Down
+                                    } else {
+                                        FocusDirection.Up
+                                    }
+                                focusManager.moveFocus(direction)
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    },
         )
     }
 }

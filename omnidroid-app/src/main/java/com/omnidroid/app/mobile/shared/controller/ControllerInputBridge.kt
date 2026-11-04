@@ -8,6 +8,7 @@ import kotlin.math.abs
 
 class ControllerInputBridge {
     var navigation: ControllerNavigationState? = null
+    var hasMenuFocus: Boolean = false
 
     private var lastX = 0
     private var lastY = 0
@@ -20,7 +21,8 @@ class ControllerInputBridge {
         event: KeyEvent,
         dispatch: (KeyEvent) -> Boolean,
     ): Boolean {
-        if (!isFromController(event)) {
+        val isGamepadKey = isGamepadButton(event.keyCode)
+        if (!isFromController(event) && !isGamepadKey) {
             return dispatch(event)
         }
 
@@ -225,6 +227,23 @@ class ControllerInputBridge {
             keyCode == KeyEvent.KEYCODE_BACK ||
             keyCode == KeyEvent.KEYCODE_BUTTON_L1 ||
             keyCode == KeyEvent.KEYCODE_BUTTON_R1
+    }
+
+    private fun isGamepadButton(keyCode: Int): Boolean {
+        return keyCode == KeyEvent.KEYCODE_BUTTON_A ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_B ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_X ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_Y ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_1 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_2 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_3 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_4 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_START ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_SELECT ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_L1 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_R1 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_L2 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_R2
     }
 
     private fun KeyEvent.remap(keyCode: Int): KeyEvent {

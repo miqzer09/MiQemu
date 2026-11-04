@@ -13,6 +13,7 @@ import com.omnidroid.app.shared.game.ShaderChooser
 import com.omnidroid.app.shared.game.view.GLRetroGameViewWrapper
 import com.omnidroid.app.shared.game.view.IRetroGameView
 import com.omnidroid.app.shared.game.view.VulkanRetroView
+import com.omnidroid.lib.library.SystemID
 import com.omnidroid.app.shared.rumble.RumbleManager
 import com.omnidroid.app.shared.settings.HDModeQuality
 import com.omnidroid.common.coroutines.MutableStateProperty
@@ -221,7 +222,7 @@ class GameViewModelRetroGameView(
                     it.key == "ppsspp_gpu_backend" ||
                     it.key == "armsx2_renderer" ||
                     it.key == "cemu_graphics_api"
-            ) && it.value.equals("vulkan", ignoreCase = true)
+            ) && it.value.contains("vulkan", ignoreCase = true)
         }
     }
 
@@ -281,8 +282,6 @@ class GameViewModelRetroGameView(
             preferLowLatencyAudio = lowLatencyAudio && !systemCoreConfig.forceStandardAudioBuffer
             rumbleEventsEnabled = requestRumble
             skipDuplicateFrames = systemCoreConfig.skipDuplicateFrames
-            allowFrameCatchUp = systemCoreConfig.allowFrameCatchUp
-            nonBlockingVulkanPresent = systemCoreConfig.nonBlockingVulkanPresent
             enableMicrophone = requestMicrophone
             immersiveMode = buildImmersiveModeConfiguration(enableImmersiveMode)
         }
@@ -368,6 +367,7 @@ class GameViewModelRetroGameView(
         }
 
         retroGameView?.updateVariables(*updatedVariables)
+        retroGameView?.refreshAspectRatio()
     }
 
     fun applyCoreVariables(options: List<CoreVariable>) {

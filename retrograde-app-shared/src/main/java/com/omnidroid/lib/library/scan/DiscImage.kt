@@ -36,15 +36,24 @@ internal object DiscImages {
         source: RandomAccessBytes,
         base: Long = 0,
     ): SectorLayout {
-        val head = source.read(base, 32 * 1024)
-        if (head.size > 0x8006 && head.copyOfRange(0x8001, minOf(head.size, 0x8006)).startsWithAscii("CD001")) {
+        val pvd2048 = source.read(base + 0x8000, 6)
+        if (pvd2048.size >= 6 && pvd2048.copyOfRange(1, 6).startsWithAscii("CD001")) {
             return SectorLayout(2048, 0, base)
         }
+        val head = source.read(base, 32)
         if (head.size >= 12 && head.copyOfRange(0, 12).contentEquals(SYNC)) {
-            if (head.size > 2448 + 12 && head.copyOfRange(2448, 2460).contentEquals(SYNC)) {
-                return SectorLayout(2448, 16, base)
+            val is2448 = source.read(base + 2448, 12).contentEquals(SYNC)
+            val sectorSize = if (is2448) 2448 else 2352
+
+            // Check PVD at LBA 16 for Mode 1 (offset 16) vs Mode 2 Form 1 (offset 24, e.g. PSX raw CD-ROM XA)
+            val lba16 = source.read(base + 16L * sectorSize, 32)
+            val userOffset = when {
+                lba16.size >= 30 && lba16.copyOfRange(25, 30).startsWithAscii("CD001") -> 24
+                lba16.size >= 22 && lba16.copyOfRange(17, 22).startsWithAscii("CD001") -> 16
+                head.size > 15 && (head[15].toInt() and 0xFF) == 2 -> 24
+                else -> 16
             }
-            return SectorLayout(2352, 16, base)
+            return SectorLayout(sectorSize, userOffset, base)
         }
         return SectorLayout(2048, 0, base)
     }

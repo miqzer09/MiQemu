@@ -37,6 +37,7 @@ object FolderHints {
             "ps1" to SystemID.PSX,
             "playstation" to SystemID.PSX,
             "psone" to SystemID.PSX,
+            "ps" to SystemID.PSX,
             "psp" to SystemID.PSP,
             "playstationportable" to SystemID.PSP,
             "nds" to SystemID.NDS,

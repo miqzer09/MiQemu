@@ -39,37 +39,22 @@ object ShaderChooser {
     }
 
     private fun getDefaultShaderForSystem(system: GameSystem): ShaderConfig {
+        return ShaderConfig.Sharp
+    }
+
+    private fun is3DSystem(system: GameSystem): Boolean {
         return when (system.id) {
-            SystemID.GBA -> ShaderConfig.LCD
-            SystemID.GBC -> ShaderConfig.LCD
-            SystemID.GB -> ShaderConfig.LCD
-            SystemID.N64 -> ShaderConfig.CRT
-            SystemID.GENESIS -> ShaderConfig.CRT
-            SystemID.SEGACD -> ShaderConfig.CRT
-            SystemID.NES -> ShaderConfig.CRT
-            SystemID.SNES -> ShaderConfig.CRT
-            SystemID.FBNEO -> ShaderConfig.CRT
-            SystemID.SMS -> ShaderConfig.CRT
-            SystemID.PSP -> ShaderConfig.LCD
-            SystemID.NDS -> ShaderConfig.LCD
-            SystemID.GG -> ShaderConfig.LCD
-            SystemID.ATARI2600 -> ShaderConfig.CRT
-            SystemID.PSX -> ShaderConfig.CRT
-            SystemID.MAME2003PLUS -> ShaderConfig.CRT
-            SystemID.ATARI7800 -> ShaderConfig.CRT
-            SystemID.PC_ENGINE -> ShaderConfig.CRT
-            SystemID.LYNX -> ShaderConfig.LCD
-            SystemID.DOS -> ShaderConfig.CRT
-            SystemID.NGP -> ShaderConfig.LCD
-            SystemID.NGC -> ShaderConfig.LCD
-            SystemID.WS -> ShaderConfig.LCD
-            SystemID.WSC -> ShaderConfig.LCD
-            SystemID.NINTENDO_3DS -> ShaderConfig.LCD
-            SystemID.PS2 -> ShaderConfig.Default
-            SystemID.GAMECUBE -> ShaderConfig.Default
-            SystemID.WII -> ShaderConfig.Default
-            SystemID.DREAMCAST -> ShaderConfig.Default
-            SystemID.WII_U -> ShaderConfig.Default
+            SystemID.PSX,
+            SystemID.N64,
+            SystemID.PSP,
+            SystemID.NDS,
+            SystemID.NINTENDO_3DS,
+            SystemID.PS2,
+            SystemID.GAMECUBE,
+            SystemID.WII,
+            SystemID.DREAMCAST,
+            SystemID.WII_U -> true
+            else -> false
         }
     }
 
@@ -77,6 +62,13 @@ object ShaderChooser {
         system: GameSystem,
         hdModeQuality: HDModeQuality,
     ): ShaderConfig {
+        // 3D systems must always use ShaderConfig.Sharp:
+        // Complex 2D vectorization shaders (CUT/CUT2/CUT3) on 3D geometry causes GPU stalls
+        // dropping framerate to ~33 FPS and starving the audio buffer.
+        // Sharp provides pristine, full-speed 60 FPS HD rendering without audio issues.
+        if (is3DSystem(system)) {
+            return ShaderConfig.Sharp
+        }
         return when (hdModeQuality) {
             HDModeQuality.LOW -> getLowQualityHdMode(system)
             HDModeQuality.MEDIUM -> getMediumQualityHdMode(system)
@@ -85,107 +77,40 @@ object ShaderChooser {
     }
 
     private fun getLowQualityHdMode(system: GameSystem): ShaderConfig {
-        val upscale8BitsMobile =
-            ShaderConfig.CUT(
-                blendMinContrastEdge = 0.00f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.85f,
-            )
-
-        val upscale8Bits =
-            ShaderConfig.CUT(
-                blendMinContrastEdge = 0.00f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-            )
-
-        val upscale16BitsMobile =
-            ShaderConfig.CUT(
-                blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.60f,
-                blendMaxSharpness = 0.85f,
-            )
-
-        val upscale16Bits =
-            ShaderConfig.CUT(
-                blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.60f,
-                blendMaxSharpness = 0.75f,
-            )
-
-        val upscale32Bits =
-            ShaderConfig.CUT(
-                blendMinContrastEdge = 0.25f,
-                blendMaxContrastEdge = 0.75f,
-                blendMaxSharpness = 0.75f,
-            )
-
-        val modern =
-            ShaderConfig.CUT(
-                blendMinContrastEdge = 0.25f,
-                blendMaxContrastEdge = 0.75f,
-                blendMaxSharpness = 0.50f,
-            )
-
-        return getConfigForSystem(
-            system,
-            upscale16BitsMobile,
-            upscale8BitsMobile,
-            upscale32Bits,
-            upscale16Bits,
-            upscale8Bits,
-            modern,
-        )
+        return ShaderConfig.Sharp
     }
 
     private fun getMediumQualityHdMode(system: GameSystem): ShaderConfig {
         val upscale8BitsMobile =
-            ShaderConfig.CUT2(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.00f,
-                blendMaxContrastEdge = 0.30f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.50f,
+                blendMaxContrastEdge = 0.50f,
+                blendMaxSharpness = 0.80f,
             )
 
         val upscale8Bits =
-            ShaderConfig.CUT2(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.00f,
-                blendMaxContrastEdge = 0.30f,
+                blendMaxContrastEdge = 0.50f,
                 blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.50f,
             )
 
         val upscale16BitsMobile =
-            ShaderConfig.CUT2(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.75f,
+                blendMaxContrastEdge = 0.60f,
+                blendMaxSharpness = 0.80f,
             )
 
         val upscale16Bits =
-            ShaderConfig.CUT2(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.50f,
+                blendMaxContrastEdge = 0.60f,
                 blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.25f,
             )
 
-        val upscale32Bits =
-            ShaderConfig.CUT2(
-                blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.25f,
-            )
-
-        val modern =
-            ShaderConfig.CUT2(
-                blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.50f,
-                hardEdgesSearchMaxError = 0.25f,
-            )
+        val upscale32Bits = ShaderConfig.Sharp
+        val modern = ShaderConfig.Sharp
 
         return getConfigForSystem(
             system,
@@ -199,53 +124,38 @@ object ShaderChooser {
     }
 
     private fun getHighQualityHdMode(system: GameSystem): ShaderConfig {
+        // Use optimized single-pass CUT without iterative loops (CUT3) so framerates remain 60 FPS
+        // without audio stutter or frame drops on TV GPUs.
         val upscale8BitsMobile =
-            ShaderConfig.CUT3(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.00f,
-                blendMaxContrastEdge = 0.30f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.50f,
+                blendMaxContrastEdge = 0.40f,
+                blendMaxSharpness = 0.85f,
             )
 
         val upscale8Bits =
-            ShaderConfig.CUT3(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.00f,
-                blendMaxContrastEdge = 0.30f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.50f,
+                blendMaxContrastEdge = 0.40f,
+                blendMaxSharpness = 0.80f,
             )
 
         val upscale16BitsMobile =
-            ShaderConfig.CUT3(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.10f,
                 blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.25f,
+                blendMaxSharpness = 0.85f,
             )
 
         val upscale16Bits =
-            ShaderConfig.CUT3(
+            ShaderConfig.CUT(
                 blendMinContrastEdge = 0.10f,
                 blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.25f,
+                blendMaxSharpness = 0.80f,
             )
 
-        val upscale32Bits =
-            ShaderConfig.CUT3(
-                blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.25f,
-            )
-
-        val modern =
-            ShaderConfig.CUT3(
-                blendMinContrastEdge = 0.10f,
-                blendMaxContrastEdge = 0.50f,
-                blendMaxSharpness = 0.75f,
-                hardEdgesSearchMaxError = 0.25f,
-            )
+        val upscale32Bits = ShaderConfig.Sharp
+        val modern = ShaderConfig.Sharp
 
         return getConfigForSystem(
             system,

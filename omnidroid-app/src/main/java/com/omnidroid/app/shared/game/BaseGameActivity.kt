@@ -36,6 +36,7 @@ import com.omnidroid.app.shared.settings.ControllerConfigsManager
 import com.omnidroid.app.shared.storage.cache.CacheCleanerWork
 import com.omnidroid.app.tv.channel.ChannelUpdateWork
 import com.omnidroid.app.tv.shared.TVHelper
+import com.omnidroid.lib.library.CoreID
 import com.omnidroid.lib.library.db.RetrogradeDatabase
 import com.omnidroid.lib.library.db.entity.GameSession
 import com.omnidroid.common.coroutines.safeCollect
@@ -163,7 +164,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    baseGameScreenViewModel.requestFinish()
+                    baseGameScreenViewModel.showMenu()
                 }
             },
         )
@@ -355,10 +356,24 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         return super.onGenericMotionEvent(event)
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
+            if (event.action == KeyEvent.ACTION_UP) {
+                baseGameScreenViewModel.showMenu()
+            }
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent,
     ): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            baseGameScreenViewModel.showMenu()
+            return true
+        }
         val handled = baseGameScreenViewModel.sendKeyEvent(keyCode, event)
         if (handled) {
             return true

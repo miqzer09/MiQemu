@@ -26,6 +26,7 @@ import com.omnidroid.app.utils.android.settings.OmnidroidSettingsSwitch
 import com.omnidroid.app.utils.android.settings.booleanPreferenceState
 import com.omnidroid.app.utils.android.settings.indexPreferenceState
 import com.omnidroid.lib.core.CoreVariablesManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
 @Composable
@@ -55,8 +56,15 @@ fun GameMenuCoreOptionsScreen(
     }
 
     LaunchedEffect(Unit) {
-        yield()
-        runCatching { firstItemRequester.requestFocus() }
+        repeat(5) {
+            yield()
+            try {
+                firstItemRequester.requestFocus()
+                return@LaunchedEffect
+            } catch (_: Exception) {
+                delay(100)
+            }
+        }
     }
 
     val controllers = gameMenuRequest.coreConfig.controllerConfigs

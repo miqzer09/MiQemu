@@ -72,8 +72,8 @@ private val DarkColorScheme =
         scrim = md_theme_dark_scrim,
     )
 
-val HomeChromeBackground = Color(0xFF0B0B0B)
-val LibraryNeonGreen = Color(0xFF00B33C)
+val HomeChromeBackground = YunoDarkBackground
+val LibraryNeonGreen = YunoPurplePrimary
 val BatteryLowRed = Color(0xFFFF3B30)
 
 @Composable

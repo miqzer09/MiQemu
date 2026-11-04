@@ -133,6 +133,7 @@ fun LibraryTopBar(
     operationInProgress: Boolean,
     syncProgress: SyncProgress? = null,
     gamepadConnected: Boolean,
+    controllerConnected: Boolean = gamepadConnected,
     onRandomPressed: () -> Unit,
     onCastPressed: () -> Unit,
     onSettingsPressed: () -> Unit,
@@ -244,7 +245,7 @@ fun LibraryTopBar(
                 },
                 onSearchActivate = { controllerNav?.searchArmed?.value = true },
                 searchFocusRequester = controllerNav?.searchFocusRequester,
-                searchCanFocus = !gamepadConnected || searchArmed,
+                searchCanFocus = !controllerConnected || searchArmed,
                 casting = casting,
                 onDismissSearch = { focusManager.clearFocus() },
             )
@@ -365,7 +366,7 @@ fun LibraryTopBar(
                                         },
                                         focusRequester = controllerNav?.searchFocusRequester,
                                         // Controller D-pad skips search unless Y armed it.
-                                        canFocus = !gamepadConnected || searchArmed,
+                                        canFocus = !controllerConnected || searchArmed,
                                         trailing = { LibrarySortButton(sort = sort, menu = sortMenu) },
                                         modifier = Modifier.width(searchWidth),
                                     )
@@ -599,10 +600,10 @@ private fun PortraitDetailsTopBar(
 /** Settings, cast and play-random: borderless utility actions, unlike the dock's console circles. */
 @Composable
 private fun LibraryUtilityButtons(
-    casting: Boolean,
+    casting: Boolean = false,
     iconSize: Dp,
-    onRandomPressed: () -> Unit,
-    onCastPressed: () -> Unit,
+    onRandomPressed: () -> Unit = {},
+    onCastPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit,
 ) {
     Row(
@@ -613,21 +614,6 @@ private fun LibraryUtilityButtons(
             Icon(
                 Icons.Outlined.Settings,
                 contentDescription = stringResource(R.string.settings),
-                modifier = Modifier.size(iconSize),
-            )
-        }
-        FloatingChromeButton(onClick = onCastPressed) {
-            Icon(
-                imageVector = if (casting) Icons.Filled.CastConnected else Icons.Filled.Cast,
-                contentDescription = stringResource(R.string.cast),
-                tint = if (casting) LibraryNeonGreen else LocalContentColor.current,
-                modifier = Modifier.size(iconSize),
-            )
-        }
-        FloatingChromeButton(onClick = onRandomPressed) {
-            Icon(
-                imageVector = Icons.Outlined.Casino,
-                contentDescription = stringResource(R.string.library_play_random),
                 modifier = Modifier.size(iconSize),
             )
         }

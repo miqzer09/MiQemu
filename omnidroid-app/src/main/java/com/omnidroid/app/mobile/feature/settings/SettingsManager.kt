@@ -40,7 +40,7 @@ class SettingsManager(private val context: Context, sharedPreferences: Lazy<Shar
         return booleanPreference(R.string.pref_key_hd_mode, false)
     }
 
-    suspend fun hdModeQuality() = HDModeQuality.parse(intPreference(R.string.pref_key_hd_mode_quality, 1))
+    suspend fun hdModeQuality() = HDModeQuality.parse(intPreference(R.string.pref_key_hd_mode_quality, 2))
 
     suspend fun tiltSensitivity() = floatPreference(R.string.pref_key_tilt_sensitivity_index, 10, 6)
 

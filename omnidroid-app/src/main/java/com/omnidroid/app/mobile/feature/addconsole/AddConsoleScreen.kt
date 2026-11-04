@@ -60,6 +60,8 @@ import androidx.compose.ui.zIndex
 import com.omnidroid.R
 import com.omnidroid.app.mobile.feature.addconsole.AddConsoleViewModel.ConsoleItem
 import com.omnidroid.app.mobile.shared.compose.ui.HomeChromeBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoBubbleBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoSoundManager
 import com.omnidroid.app.mobile.shared.controller.LocalControllerNavigation
 import com.omnidroid.app.mobile.shared.controller.controllerFocusGlow
 import kotlin.math.absoluteValue
@@ -118,12 +120,14 @@ fun AddConsoleScreen(
     }
 
     fun moveBy(delta: Int) {
+        YunoSoundManager.playClick()
         animateToIndex(selectedIndex + delta)
     }
 
     fun confirmSelection() {
         val console = consoles.getOrNull(selectedIndex) ?: return
         if (!console.installed && state.installing == null) {
+            YunoSoundManager.playEnter()
             viewModel.install(console.metaSystemID)
         }
     }
@@ -192,6 +196,7 @@ fun AddConsoleScreen(
                     )
                 },
     ) {
+        YunoBubbleBackground(modifier = Modifier.fillMaxSize())
         if (consoles.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             return@Box

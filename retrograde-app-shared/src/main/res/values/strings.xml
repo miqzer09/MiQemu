@@ -30,7 +30,17 @@
     <string name="setting_stella_crop_hoverscan">Crop horizontal overscan</string>
     <string name="setting_fceumm_overscan_h">Crop horizontal overscan</string>
     <string name="setting_fceumm_overscan_v">Crop vertical overscan</string>
-    <string name="setting_fceumm_nospritelimit">No sprite limit</string>
+        <string name="setting_fceumm_nospritelimit">No sprite limit</string>
+    <string name="setting_fceumm_turbo_enable">Turbo buttons</string>
+    <string name="setting_fceumm_turbo_delay">Turbo speed</string>
+    <string name="value_fceumm_turbo_none">Disabled</string>
+    <string name="value_fceumm_turbo_player1">Player 1 (X/Y)</string>
+    <string name="value_fceumm_turbo_player2">Player 2 (X/Y)</string>
+    <string name="value_fceumm_turbo_both">Both Players (X/Y)</string>
+    <string name="value_fceumm_turbo_delay_fastest">Fastest (1 frame)</string>
+    <string name="value_fceumm_turbo_delay_fast">Fast (2 frames)</string>
+    <string name="value_fceumm_turbo_delay_normal">Normal (3 frames)</string>
+    <string name="value_fceumm_turbo_delay_slow">Slow (5 frames)</string>
     <string name="setting_genesis_plus_gx_blargg_ntsc_filter">TV effect</string>
     <string name="setting_genesis_plus_gx_overscan">Borders</string>
     <string name="setting_genesis_plus_gx_lcd_filter">LCD ghosting</string>
@@ -67,6 +77,31 @@
     <string name="value_dithering_disabled">Disabled</string>
     <string name="value_dithering_enabled">Enabled</string>
     <string name="value_dithering_force">Force</string>
+
+    <!-- SwanStation / DuckStation settings -->
+    <string name="setting_swanstation_resolution">Internal resolution (HD Scale)</string>
+    <string name="value_swanstation_res_1x">1x Native (240p)</string>
+    <string name="value_swanstation_res_2x">2x Enhanced (480p)</string>
+    <string name="value_swanstation_res_3x">3x High HD (720p)</string>
+    <string name="value_swanstation_res_4x">4x High HD (960p)</string>
+    <string name="value_swanstation_res_5x">5x Full HD (1080p)</string>
+    <string name="setting_swanstation_renderer">Graphics Renderer</string>
+    <string name="value_swanstation_renderer_opengl">Hardware (OpenGL)</string>
+    <string name="value_swanstation_renderer_vulkan">Hardware (Vulkan)</string>
+    <string name="value_swanstation_renderer_software">Software</string>
+    <string name="setting_swanstation_pgxp">PGXP 3D geometry precision</string>
+    <string name="setting_swanstation_pgxp_tex">PGXP texture correction</string>
+    <string name="setting_swanstation_truecolor">24-bit True Color</string>
+    <string name="setting_swanstation_aspect_ratio">Aspect ratio</string>
+    <string name="value_swanstation_aspect_auto">Auto (Original)</string>
+    <string name="value_swanstation_aspect_4_3">4:3 (Original)</string>
+    <string name="value_swanstation_aspect_16_9">16:9 (Widescreen)</string>
+    <string name="setting_swanstation_texture_filter">Texture filtering</string>
+    <string name="value_filter_nearest">Nearest</string>
+    <string name="value_filter_bilinear">Bilinear</string>
+    <string name="value_filter_xbr">xBR</string>
+    <string name="value_swanstation_enabled">Enabled</string>
+    <string name="value_swanstation_disabled">Disabled</string>
 
     <!-- Snes9x settings -->
     <string name="setting_snes9x_aspect_ratio">Aspect ratio</string>

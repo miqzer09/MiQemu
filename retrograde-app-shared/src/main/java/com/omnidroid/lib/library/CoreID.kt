@@ -54,6 +54,11 @@ enum class CoreID(
         "PCSXReARMed",
         "libpcsx_rearmed_libretro_android.so",
     ),
+    SWANSTATION(
+        "swanstation",
+        "DuckStation (SwanStation)",
+        "libswanstation_libretro_android.so",
+    ),
     PPSSPP(
         "ppsspp",
         "PPSSPP",

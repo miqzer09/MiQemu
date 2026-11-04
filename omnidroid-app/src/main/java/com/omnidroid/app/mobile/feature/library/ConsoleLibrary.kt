@@ -24,6 +24,8 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -309,16 +311,31 @@ internal fun ConsoleLibrary(
         items.gameAt(state.selectedIndex)?.let(onPlayGame)
     }
 
+    val carouselFocusRequester = focusRequester
+    val startButtonFocusRequester = remember { FocusRequester() }
+    val loveButtonFocusRequester = remember { FocusRequester() }
+    val gearButtonFocusRequester = remember { FocusRequester() }
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
-                .focusRequester(focusRequester)
+                .focusRequester(carouselFocusRequester)
                 .onFocusChanged { focusState ->
                     hasFocus = focusState.isFocused
                     if (!focusState.isFocused) navigation?.setFocusedGame(null)
                 }
-                .onKeyEvent { event -> handleCarouselKey(event, state, scope, playSelected) }
+                .onKeyEvent { event ->
+                    handleCarouselKey(
+                        event = event,
+                        state = state,
+                        scope = scope,
+                        onConfirm = playSelected,
+                        onNavigateDown = {
+                            runCatching { startButtonFocusRequester.requestFocus() }
+                        },
+                    )
+                }
                 .focusable(),
     ) {
         if (portrait) {
@@ -334,6 +351,10 @@ internal fun ConsoleLibrary(
                 onGameLongClick = onGameLongClick,
                 onFavoriteToggle = onFavoriteToggle,
                 onPlay = playSelected,
+                carouselFocusRequester = carouselFocusRequester,
+                startButtonFocusRequester = startButtonFocusRequester,
+                loveButtonFocusRequester = loveButtonFocusRequester,
+                gearButtonFocusRequester = gearButtonFocusRequester,
             )
         } else {
             ConsoleLandscapeCarousel(
@@ -348,6 +369,10 @@ internal fun ConsoleLibrary(
                 onGameLongClick = onGameLongClick,
                 onFavoriteToggle = onFavoriteToggle,
                 onPlay = playSelected,
+                carouselFocusRequester = carouselFocusRequester,
+                startButtonFocusRequester = startButtonFocusRequester,
+                loveButtonFocusRequester = loveButtonFocusRequester,
+                gearButtonFocusRequester = gearButtonFocusRequester,
             )
         }
     }
@@ -358,6 +383,7 @@ private fun handleCarouselKey(
     state: ConsoleCarouselState,
     scope: CoroutineScope,
     onConfirm: () -> Unit,
+    onNavigateDown: () -> Unit = {},
 ): Boolean {
     return when (event.key) {
         // At either end the key is left unconsumed so focus can move on to the console rail.
@@ -369,6 +395,12 @@ private fun handleCarouselKey(
         Key.DirectionRight -> {
             if (event.type != KeyEventType.KeyDown || state.targetIndex >= state.itemCount - 1) return false
             state.animateTo(scope, state.targetIndex + 1)
+            true
+        }
+        Key.DirectionDown -> {
+            if (event.type == KeyEventType.KeyDown) {
+                onNavigateDown()
+            }
             true
         }
         Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA -> {
@@ -434,6 +466,10 @@ private fun ConsoleLandscapeCarousel(
     onGameLongClick: (Game) -> Unit,
     onFavoriteToggle: (Game, Boolean) -> Unit,
     onPlay: () -> Unit,
+    carouselFocusRequester: FocusRequester? = null,
+    startButtonFocusRequester: FocusRequester? = null,
+    loveButtonFocusRequester: FocusRequester? = null,
+    gearButtonFocusRequester: FocusRequester? = null,
 ) {
     val scope = rememberCoroutineScope()
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -481,6 +517,10 @@ private fun ConsoleLandscapeCarousel(
                     onPlay = onPlay,
                     onFavoriteToggle = onFavoriteToggle,
                     onSettings = onGameLongClick,
+                    carouselFocusRequester = carouselFocusRequester,
+                    startButtonFocusRequester = startButtonFocusRequester,
+                    loveButtonFocusRequester = loveButtonFocusRequester,
+                    gearButtonFocusRequester = gearButtonFocusRequester,
                 )
             },
         ) { measurables, constraints ->
@@ -638,6 +678,10 @@ private fun LandscapeInfoPanel(
     onPlay: () -> Unit,
     onFavoriteToggle: (Game, Boolean) -> Unit,
     onSettings: (Game) -> Unit,
+    carouselFocusRequester: FocusRequester? = null,
+    startButtonFocusRequester: FocusRequester? = null,
+    loveButtonFocusRequester: FocusRequester? = null,
+    gearButtonFocusRequester: FocusRequester? = null,
 ) {
     if (game == null) return
     val context = LocalContext.current
@@ -671,6 +715,10 @@ private fun LandscapeInfoPanel(
             onPlay = onPlay,
             onFavoriteToggle = onFavoriteToggle,
             onSettings = { onSettings(game) },
+            carouselFocusRequester = carouselFocusRequester,
+            startButtonFocusRequester = startButtonFocusRequester,
+            loveButtonFocusRequester = loveButtonFocusRequester,
+            gearButtonFocusRequester = gearButtonFocusRequester,
         )
     }
 }
@@ -698,6 +746,10 @@ private fun ConsolePortraitCarousel(
     onGameLongClick: (Game) -> Unit,
     onFavoriteToggle: (Game, Boolean) -> Unit,
     onPlay: () -> Unit,
+    carouselFocusRequester: FocusRequester? = null,
+    startButtonFocusRequester: FocusRequester? = null,
+    loveButtonFocusRequester: FocusRequester? = null,
+    gearButtonFocusRequester: FocusRequester? = null,
 ) {
     val scope = rememberCoroutineScope()
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -740,6 +792,10 @@ private fun ConsolePortraitCarousel(
                     onPlay = onPlay,
                     onFavoriteToggle = onFavoriteToggle,
                     onSettings = { items.gameAt(state.selectedIndex)?.let(onGameLongClick) },
+                    carouselFocusRequester = carouselFocusRequester,
+                    startButtonFocusRequester = startButtonFocusRequester,
+                    loveButtonFocusRequester = loveButtonFocusRequester,
+                    gearButtonFocusRequester = gearButtonFocusRequester,
                 )
             },
         ) { measurables, constraints ->
@@ -918,6 +974,10 @@ private fun ConsoleActions(
     onPlay: () -> Unit,
     onFavoriteToggle: (Game, Boolean) -> Unit,
     onSettings: () -> Unit,
+    carouselFocusRequester: FocusRequester? = null,
+    startButtonFocusRequester: FocusRequester? = null,
+    loveButtonFocusRequester: FocusRequester? = null,
+    gearButtonFocusRequester: FocusRequester? = null,
 ) {
     // Paging only re-emits the game after the database write lands, so flip the heart immediately.
     var favorite by remember(game?.id, game?.isFavorite) { mutableStateOf(game?.isFavorite == true) }
@@ -928,6 +988,10 @@ private fun ConsoleActions(
         ConsoleStartButton(
             label = label,
             showControllerGlyph = showControllerGlyph,
+            focusRequester = startButtonFocusRequester,
+            onNavigateUp = { carouselFocusRequester?.requestFocus() },
+            onNavigateLeft = { carouselFocusRequester?.requestFocus() },
+            onNavigateRight = { loveButtonFocusRequester?.requestFocus() },
             onClick = onPlay,
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -935,6 +999,10 @@ private fun ConsoleActions(
             imageVector = if (favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
             contentDescription = stringResource(R.string.favorites),
             tint = if (favorite) LibraryNeonGreen else Color.White.copy(alpha = 0.85f),
+            focusRequester = loveButtonFocusRequester,
+            onNavigateUp = { carouselFocusRequester?.requestFocus() },
+            onNavigateLeft = { startButtonFocusRequester?.requestFocus() },
+            onNavigateRight = { gearButtonFocusRequester?.requestFocus() },
             onClick = {
                 game?.let {
                     favorite = !favorite
@@ -946,6 +1014,10 @@ private fun ConsoleActions(
         ConsoleIconButton(
             imageVector = Icons.Outlined.Settings,
             contentDescription = stringResource(R.string.game_settings),
+            focusRequester = gearButtonFocusRequester,
+            onNavigateUp = { carouselFocusRequester?.requestFocus() },
+            onNavigateLeft = { loveButtonFocusRequester?.requestFocus() },
+            onNavigateRight = null,
             onClick = onSettings,
         )
     }
@@ -956,25 +1028,68 @@ private fun ConsoleIconButton(
     imageVector: ImageVector,
     contentDescription: String,
     tint: Color = Color.White.copy(alpha = 0.85f),
+    focusRequester: FocusRequester? = null,
+    onNavigateUp: () -> Unit = {},
+    onNavigateLeft: () -> Unit = {},
+    onNavigateRight: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
     Surface(
         onClick = onClick,
+        interactionSource = interactionSource,
         modifier =
             Modifier
                 .size(ConsoleActionHeight)
-                .focusProperties { canFocus = false },
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown) {
+                        when (keyEvent.key) {
+                            Key.DirectionUp -> {
+                                onNavigateUp()
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                onNavigateLeft()
+                                true
+                            }
+                            Key.DirectionRight -> {
+                                if (onNavigateRight != null) {
+                                    onNavigateRight()
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA -> true
+                            else -> false
+                        }
+                    } else if (keyEvent.type == KeyEventType.KeyUp) {
+                        when (keyEvent.key) {
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA -> {
+                                onClick()
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                }
+                .focusable(interactionSource = interactionSource),
         shape = ConsoleActionShape,
-        color = Color(0xFF2A2A2A),
-        border = BorderStroke(1.dp, Color(0xFF3A3A3A)),
-        shadowElevation = 6.dp,
+        color = if (isFocused) Color(0xFF404040) else Color(0xFF2A2A2A),
+        border = BorderStroke(if (isFocused) 3.dp else 1.dp, if (isFocused) LibraryNeonGreen else Color(0xFF3A3A3A)),
+        shadowElevation = if (isFocused) 12.dp else 6.dp,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = imageVector,
                 contentDescription = contentDescription,
                 modifier = Modifier.size(20.dp),
-                tint = tint,
+                tint = if (isFocused) Color.White else tint,
             )
         }
     }
@@ -985,18 +1100,58 @@ private fun ConsoleStartButton(
     label: String,
     showControllerGlyph: Boolean,
     modifier: Modifier = Modifier,
+    focusRequester: FocusRequester? = null,
+    onNavigateUp: () -> Unit = {},
+    onNavigateLeft: () -> Unit = {},
+    onNavigateRight: () -> Unit = {},
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
     Surface(
         onClick = onClick,
+        interactionSource = interactionSource,
         modifier =
             modifier
                 .height(ConsoleActionHeight)
                 .widthIn(min = ConsoleStartMinWidth)
-                .focusProperties { canFocus = false },
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown) {
+                        when (keyEvent.key) {
+                            Key.DirectionUp -> {
+                                onNavigateUp()
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                onNavigateLeft()
+                                true
+                            }
+                            Key.DirectionRight -> {
+                                onNavigateRight()
+                                true
+                            }
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA -> true
+                            else -> false
+                        }
+                    } else if (keyEvent.type == KeyEventType.KeyUp) {
+                        when (keyEvent.key) {
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA -> {
+                                onClick()
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                }
+                .focusable(interactionSource = interactionSource),
         shape = ConsoleActionShape,
-        color = LibraryNeonGreen,
-        shadowElevation = 6.dp,
+        color = if (isFocused) Color(0xFF00FF7F) else LibraryNeonGreen,
+        border = if (isFocused) BorderStroke(3.dp, Color.White) else null,
+        shadowElevation = if (isFocused) 12.dp else 6.dp,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp),

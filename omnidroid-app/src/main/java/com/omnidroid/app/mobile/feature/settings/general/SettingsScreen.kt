@@ -75,6 +75,8 @@ import com.omnidroid.app.mobile.feature.main.MainRoute
 import com.omnidroid.app.mobile.feature.main.navigateToRoute
 import com.omnidroid.app.mobile.shared.compose.ui.HomeChromeBackground
 import com.omnidroid.app.mobile.shared.compose.ui.LibraryNeonGreen
+import com.omnidroid.app.mobile.shared.compose.ui.YunoBubbleBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoPurplePrimary
 import com.omnidroid.app.mobile.shared.compose.ui.hugDisplayCutout
 import com.omnidroid.app.mobile.shared.controller.LocalControllerNavigation
 import com.omnidroid.app.mobile.shared.controller.controllerFocusGlow
@@ -96,8 +98,8 @@ import kotlinx.coroutines.yield
 
 private val SettingsSidebarWidth = 220.dp
 private val SettingsCardHeight = 96.dp
-private val SettingsCardShape = RoundedCornerShape(8.dp)
-private val SettingsCardColor = Color(0xFF242424)
+private val SettingsCardShape = RoundedCornerShape(12.dp)
+private val SettingsCardColor = Color(0xFF2B2830)
 
 private enum class SettingsSection(
     @StringRes val titleId: Int,
@@ -167,6 +169,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .background(HomeChromeBackground),
     ) {
+        YunoBubbleBackground(modifier = Modifier.fillMaxSize())
         val isLandscape = maxWidth > maxHeight
 
         if (isLandscape) {
@@ -622,6 +625,25 @@ private fun AboutSettings() {
                     Text(text = stringResource(id = R.string.settings_license_soundtouch))
                 }
             },
+        )
+    }
+
+    OmnidroidCardSettingsGroup(
+        title = { Text(text = stringResource(id = R.string.settings_section_about_miqemu)) },
+    ) {
+        OmnidroidSettingsMenuLink(
+            title = { Text(text = stringResource(id = R.string.settings_title_about_miqemu)) },
+            subtitle = {
+                Text(text = stringResource(id = R.string.settings_description_about_miqemu))
+            },
+            onClick = {},
+        )
+        OmnidroidSettingsMenuLink(
+            title = { Text(text = stringResource(id = R.string.settings_title_about_curator)) },
+            subtitle = {
+                Text(text = stringResource(id = R.string.settings_description_about_curator))
+            },
+            onClick = {},
         )
     }
 

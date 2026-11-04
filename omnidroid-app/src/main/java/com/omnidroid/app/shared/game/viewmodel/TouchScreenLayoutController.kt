@@ -54,12 +54,12 @@ class TouchScreenLayoutController(
                     else -> if (isLandscape) 3f else 5f / 6f
                 }
             }
-            CoreID.PCSX_REARMED -> {
+            CoreID.PCSX_REARMED, CoreID.SWANSTATION -> {
                 val aspectKey = CoreVariablesManager.computeSharedPreferenceKey(PCSX_REARMED_ASPECT_RATIO_KEY, systemId.dbname)
                 val current = sharedPreferences.getString(aspectKey, null)
                 when (current) {
-                    "16:9" -> 16f / 9f
-                    else -> 4f / 3f
+                    "4:3" -> 4f / 3f
+                    else -> 16f / 9f
                 }
             }
             CoreID.SNES9X -> {
@@ -75,8 +75,8 @@ class TouchScreenLayoutController(
                 val aspectKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-aspect", systemId.dbname)
                 val current = sharedPreferences.getString(aspectKey, null)
                 when (current) {
-                    "16:9", "16:9 adjusted" -> 16f / 9f
-                    else -> 4f / 3f
+                    "4:3" -> 4f / 3f
+                    else -> 16f / 9f
                 }
             }
             CoreID.DOLPHIN -> {
@@ -104,8 +104,8 @@ class TouchScreenLayoutController(
                     val aspectKey = CoreVariablesManager.computeSharedPreferenceKey(PCSX_REARMED_ASPECT_RATIO_KEY, systemId.dbname)
                     val current = sharedPreferences.getString(aspectKey, null)
                     when (current) {
-                        "16:9" -> 16f / 9f
-                        else -> 4f / 3f
+                        "4:3" -> 4f / 3f
+                        else -> 16f / 9f
                     }
                 }
                 SystemID.SNES -> {
@@ -121,8 +121,8 @@ class TouchScreenLayoutController(
                     val aspectKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-aspect", systemId.dbname)
                     val current = sharedPreferences.getString(aspectKey, null)
                     when (current) {
-                        "16:9", "16:9 adjusted" -> 16f / 9f
-                        else -> 4f / 3f
+                        "4:3" -> 4f / 3f
+                        else -> 16f / 9f
                     }
                 }
                 SystemID.GAMECUBE, SystemID.WII -> {

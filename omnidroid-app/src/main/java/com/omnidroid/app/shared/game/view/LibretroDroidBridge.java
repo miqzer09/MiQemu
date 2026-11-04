@@ -47,7 +47,6 @@ public final class LibretroDroidBridge {
             boolean enableVirtualFileSystem,
             boolean enableMicrophone,
             boolean skipDuplicateFrames,
-            boolean allowFrameCatchUp,
             ImmersiveMode immersiveMode,
             String language
     ) {
@@ -64,7 +63,6 @@ public final class LibretroDroidBridge {
                 enableVirtualFileSystem,
                 enableMicrophone,
                 skipDuplicateFrames,
-                allowFrameCatchUp,
                 immersiveMode,
                 language
         );
@@ -76,11 +74,11 @@ public final class LibretroDroidBridge {
     }
 
     public static void setCacheDirectory(String cacheDir) {
-        LibretroDroid.setCacheDirectory(cacheDir);
+        // no-op
     }
 
     public static void onTrimMemory(int level) {
-        LibretroDroid.onTrimMemory(level);
+        // no-op
     }
 
     public static void loadGameFromVirtualFiles(List<VirtualFile> virtualFiles) {

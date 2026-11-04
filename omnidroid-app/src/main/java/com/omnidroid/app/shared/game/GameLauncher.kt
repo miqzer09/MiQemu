@@ -43,7 +43,7 @@ class GameLauncher(
             return false
         }
 
-        if (TVHelper.isTV(activity) && !inputDeviceManager.hasEnabledGamePad()) {
+        if (false && TVHelper.isTV(activity) && !inputDeviceManager.hasEnabledGamePad()) {
             activity.displayToast(R.string.tv_game_message_missing_gamepad)
             return false
         }

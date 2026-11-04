@@ -214,12 +214,10 @@ class VulkanRetroView(
                 data.gameVirtualFiles.isNotEmpty(),
                 data.enableMicrophone,
                 data.skipDuplicateFrames,
-                data.allowFrameCatchUp,
                 data.immersiveMode,
                 language,
             )
             data.rumbleEventsEnabled.let { LibretroDroid.setRumbleEnabled(it) }
-            LibretroDroid.setNonBlockingVulkanPresent(data.nonBlockingVulkanPresent)
             LibretroDroid.setViewportAlignment(data.viewportAlignment.value)
         } catch (e: RetroException) {
             Timber.e(e, "RetroException in VulkanRetroView onCreate (code=${e.errorCode})")

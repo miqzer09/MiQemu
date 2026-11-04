@@ -30,6 +30,7 @@ import com.omnidroid.app.utils.android.settings.OmnidroidSettingsPage
 import com.omnidroid.app.utils.android.settings.OmnidroidSettingsSwitch
 import com.omnidroid.lib.savesync.GameCloudSyncOverride
 import com.omnidroid.lib.savesync.GameCloudSyncPreferences
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
 @Composable
@@ -52,8 +53,15 @@ fun GameMenuHomeScreen(
     }
 
     LaunchedEffect(Unit) {
-        yield()
-        runCatching { firstItemRequester.requestFocus() }
+        repeat(5) {
+            yield()
+            try {
+                firstItemRequester.requestFocus()
+                return@LaunchedEffect
+            } catch (_: Exception) {
+                delay(100)
+            }
+        }
     }
 
     OmnidroidSettingsPage {

@@ -13,24 +13,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.omnidroid.app.mobile.shared.compose.ui.YunoDarkBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoPurplePrimary
 
-val ControllerHintBarRowHeight = 32.dp
-private val HintKeyFill = Color(0xFF2A2A33)
-private val HintKeyBorder = Color(0x66FFFFFF)
-private val HintLabel = Color(0xD9FFFFFF)
+val ControllerHintBarRowHeight = 34.dp
+private val HintKeyFill = Color(0xFF342A3D)
+private val HintKeyBorder = YunoPurplePrimary.copy(alpha = 0.55f)
+private val HintKeyText = Color.White
+private val HintLabel = Color.White.copy(alpha = 0.90f)
 
 @Composable
 fun ControllerHintBar(
@@ -51,9 +54,9 @@ fun ControllerHintBar(
                     .height(ControllerHintBarRowHeight)
                     .background(
                         Brush.verticalGradient(
-                            0f to Color.Black,
-                            0.45f to Color.Black.copy(alpha = 0.82f),
-                            1f to Color.Transparent,
+                            0f to Color.Transparent,
+                            0.35f to YunoDarkBackground.copy(alpha = 0.85f),
+                            1f to YunoDarkBackground.copy(alpha = 0.98f),
                         ),
                     )
                     .padding(horizontal = 20.dp),
@@ -118,12 +121,12 @@ private fun HintKeyChip(label: String) {
     ) {
         Text(
             text = label,
-            color = Color.White,
+            color = HintKeyText,
             style =
                 TextStyle(
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 9.sp,
+                    fontSize = 9.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 9.5.sp,
                     platformStyle = PlatformTextStyle(includeFontPadding = false),
                 ),
         )

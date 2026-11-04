@@ -64,6 +64,10 @@ import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+import com.omnidroid.app.mobile.shared.compose.ui.YunoBubbleBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoPurplePrimary
+import com.omnidroid.app.mobile.shared.compose.ui.YunoSurfaceVariant
 import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ZoomIn
@@ -127,6 +131,7 @@ import com.omnidroid.app.mobile.shared.compose.ui.OmnidroidGameImage
 import com.omnidroid.app.mobile.shared.compose.ui.LibraryGameCardAspectRatio
 import com.omnidroid.app.mobile.shared.compose.ui.LibraryNeonGreen
 import com.omnidroid.app.mobile.shared.compose.ui.LocalAdaptiveLayout
+import com.omnidroid.app.mobile.shared.compose.ui.YunoSoundManager
 import com.omnidroid.app.mobile.shared.compose.ui.hugDisplayCutout
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -235,6 +240,9 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .background(HomeChromeBackground),
     ) {
+        YunoBubbleBackground(
+            modifier = Modifier.matchParentSize(),
+        )
         if (state.layout == LibraryLayout.CONSOLE) {
             ConsoleBackdrop(
                 game = backdropGame,
@@ -371,18 +379,19 @@ private fun LibrarySidebar(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SidebarIconButton(
+            selected = filter is LibraryFilter.All,
+            icon = null,
+            textSymbol = "∞",
+            contentDescription = stringResource(R.string.show_all),
+            onClick = { onFilterSelected(LibraryFilter.All) },
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        SidebarIconButton(
             selected = filter is LibraryFilter.Favorites,
-            icon = if (filter is LibraryFilter.Favorites) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+            icon = if (filter is LibraryFilter.Favorites) Icons.Filled.Star else Icons.Filled.StarBorder,
             contentDescription = stringResource(R.string.favorites),
             onClick = { onFilterSelected(LibraryFilter.Favorites) },
             pinned = startupFilter is LibraryFilter.Favorites,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarIconButton(
-            selected = filter is LibraryFilter.All,
-            icon = Icons.Filled.GridView,
-            contentDescription = stringResource(R.string.show_all),
-            onClick = { onFilterSelected(LibraryFilter.All) },
         )
         Spacer(modifier = Modifier.height(4.dp))
         HorizontalDivider(
@@ -460,27 +469,40 @@ private fun Modifier.dockEdgeFade(
 @Composable
 private fun SidebarIconButton(
     selected: Boolean,
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    textSymbol: String? = null,
     contentDescription: String,
     onClick: () -> Unit,
     pinned: Boolean = false,
 ) {
     val adaptiveSpec = LocalAdaptiveLayout.current
+    val shape = RoundedCornerShape(14.dp)
     Surface(
-        onClick = onClick,
-        modifier = Modifier.size(adaptiveSpec.sidebarButtonSize).controllerFocusGlow(CircleShape),
-        shape = CircleShape,
-        color = DockButtonColor,
+        onClick = {
+            YunoSoundManager.playOpenRail()
+            onClick()
+        },
+        modifier = Modifier.size(adaptiveSpec.sidebarButtonSize).controllerFocusGlow(shape),
+        shape = shape,
+        color = if (selected) YunoSurfaceVariant else Color(0xFF262228),
         tonalElevation = 0.dp,
-        border = if (selected) BorderStroke(2.dp, LibraryNeonGreen) else null,
+        border = if (selected) BorderStroke(2.dp, YunoPurplePrimary) else BorderStroke(1.dp, Color(0xFF38343C)),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(adaptiveSpec.sidebarIconSize),
-                tint = if (selected) LibraryNeonGreen else DockMutedTint,
-            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(adaptiveSpec.sidebarIconSize),
+                    tint = if (selected) Color.White else Color(0xFFCAC4D0),
+                )
+            } else if (textSymbol != null) {
+                Text(
+                    text = textSymbol,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = if (selected) Color.White else Color(0xFFCAC4D0),
+                )
+            }
             StartupBadge(visible = pinned)
         }
     }
@@ -493,7 +515,7 @@ private fun BoxScope.StartupBadge(visible: Boolean) {
         imageVector = Icons.Filled.Star,
         contentDescription = null,
         modifier = Modifier.align(Alignment.TopEnd).size(14.dp).padding(1.dp),
-        tint = LibraryNeonGreen,
+        tint = YunoPurplePrimary,
     )
 }
 
@@ -513,8 +535,9 @@ private fun SidebarSystemLogoButton(
 ) {
     val adaptiveSpec = LocalAdaptiveLayout.current
     val buttonSize = adaptiveSpec.sidebarButtonSize
+    val shape = RoundedCornerShape(14.dp)
     val background by animateColorAsState(
-        targetValue = if (selected) Color(meta.color()) else DockButtonColor,
+        targetValue = if (selected) YunoSurfaceVariant else Color(0xFF262228),
         animationSpec = tween(220),
         label = "dockConsoleColor",
     )
@@ -523,16 +546,17 @@ private fun SidebarSystemLogoButton(
             Modifier
                 .height(buttonSize)
                 .widthIn(min = buttonSize)
-                .controllerFocusGlow(CircleShape)
-                .clip(CircleShape)
+                .controllerFocusGlow(shape)
+                .clip(shape)
                 .combinedClickable(
                     role = Role.Button,
                     onClick = onClick,
                     onLongClick = onLongClick,
                 ),
-        shape = CircleShape,
+        shape = shape,
         color = background,
         tonalElevation = 0.dp,
+        border = if (selected) BorderStroke(2.dp, YunoPurplePrimary) else BorderStroke(1.dp, Color(0xFF38343C)),
     ) {
         Box(contentAlignment = Alignment.CenterStart) {
             Row(
@@ -545,9 +569,9 @@ private fun SidebarSystemLogoButton(
                     modifier =
                         Modifier
                             .size(buttonSize)
-                            .padding(buttonSize * 0.08f),
+                            .padding(buttonSize * 0.12f),
                     contentScale = ContentScale.Fit,
-                    colorFilter = if (selected) null else ColorFilter.tint(DockMutedTint),
+                    colorFilter = if (selected) null else ColorFilter.tint(Color(0xFFCAC4D0)),
                 )
                 if (selected && label != null) {
                     Text(
@@ -695,6 +719,7 @@ private fun LibraryGames(
             continueGame != null
     LaunchedEffect(requestInitialFocus, games.itemCount, showContinue, state.layout) {
         if (requestInitialFocus && (games.itemCount > 0 || showContinue)) {
+            delay(100)
             runCatching { firstItemRequester.requestFocus() }
         }
     }
@@ -714,7 +739,7 @@ private fun LibraryGames(
                 else -> GameCardInfoStyle.MINIMAL
             }
         }
-    val showViewBar = games.itemCount > 0 || showContinue || portrait
+    val showViewBar = portrait
     val pinchScale = remember { mutableFloatStateOf(1f) }
     val currentZoomDensity by rememberUpdatedState(state.zoomDensity)
     val currentOnZoomDensityChange by rememberUpdatedState(onZoomDensityChange)
@@ -875,16 +900,21 @@ private fun LibraryGames(
                         }
                     } else {
                         val adaptiveSpec = LocalAdaptiveLayout.current
-                        val rows = libraryGridRows(state.zoomDensity, maxHeight, adaptiveSpec.isSquare)
+                        val rows = if (!portrait) 2 else libraryGridRows(state.zoomDensity, maxHeight, adaptiveSpec.isSquare)
                         LazyHorizontalGrid(
                             modifier =
                                 Modifier
                                     .fillMaxSize()
                                     .focusGroup(),
                             rows = GridCells.Fixed(rows),
-                            contentPadding = PaddingValues(horizontal = adaptiveSpec.gridSpacing + 4.dp, vertical = adaptiveSpec.gridSpacing),
-                            horizontalArrangement = Arrangement.spacedBy(adaptiveSpec.gridSpacing),
-                            verticalArrangement = Arrangement.spacedBy(adaptiveSpec.gridSpacing),
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 24.dp,
+                                top = 8.dp,
+                                bottom = 12.dp,
+                            ),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
                         ) {
                             if (featured != null) {
                                 item(key = "continue-${featured.id}") {
@@ -894,7 +924,7 @@ private fun LibraryGames(
                                         game = featured,
                                         modifier = Modifier.focusRequester(firstItemRequester),
                                         continueAction = true,
-                                        infoStyle = infoStyle,
+                                        infoStyle = GameCardInfoStyle.MINIMAL,
                                         onClick = { onContinueClick(featured) },
                                         onLongClick = { onGameLongClick(featured) },
                                     )
@@ -917,7 +947,7 @@ private fun LibraryGames(
                                             Modifier
                                         },
                                     continueAction = false,
-                                    infoStyle = infoStyle,
+                                    infoStyle = GameCardInfoStyle.MINIMAL,
                                     onClick = { onGameClick(game) },
                                     onLongClick = { onGameLongClick(game) },
                                 )
@@ -1282,29 +1312,6 @@ private fun LibraryViewModeButtons(
             layout = layout,
             onLayoutChange = onLayoutChange,
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Box(
-            modifier =
-                Modifier
-                    .size(28.dp)
-                    .background(Color(0xFF161616), CircleShape)
-                    .border(
-                        BorderStroke(1.dp, if (portrait) LibraryNeonGreen else Color(0xFF2E2E2E)),
-                        CircleShape,
-                    ),
-        ) {
-            LayoutToggleIcon(
-                selected = portrait,
-                icon = Icons.Outlined.ScreenRotation,
-                boxSize = 28.dp,
-                iconSize = 18.dp,
-                contentDescription =
-                    stringResource(
-                        if (portrait) R.string.library_view_landscape else R.string.library_view_portrait,
-                    ),
-                onClick = { onPortraitChange(!portrait) },
-            )
-        }
     }
 }
 

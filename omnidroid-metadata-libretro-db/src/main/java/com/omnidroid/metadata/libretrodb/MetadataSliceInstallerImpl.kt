@@ -213,6 +213,7 @@ class MetadataSliceInstallerImpl(
         val sharedCore = when (core) {
             CoreID.MAME2003PLUS -> CoreID.FBNEO
             CoreID.CITRA -> CoreID.AZAHAR
+            CoreID.SWANSTATION -> CoreID.PCSX_REARMED
             else -> null
         }
         if (sharedCore != null) {

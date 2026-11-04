@@ -82,7 +82,15 @@ import com.omnidroid.R
 import com.omnidroid.app.mobile.feature.library.LibraryTopBarRowHeight
 import com.omnidroid.app.mobile.shared.compose.ui.HomeChromeBackground
 import com.omnidroid.app.mobile.shared.compose.ui.LibraryNeonGreen
+import com.omnidroid.app.mobile.shared.compose.ui.YunoBubbleBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoDarkBackground
+import com.omnidroid.app.mobile.shared.compose.ui.YunoFavoriteRed
+import com.omnidroid.app.mobile.shared.compose.ui.YunoPurpleContainer
+import com.omnidroid.app.mobile.shared.compose.ui.YunoPurplePrimary
+import com.omnidroid.app.mobile.shared.compose.ui.YunoSoundManager
 import com.omnidroid.app.mobile.shared.controller.LocalControllerNavigation
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import com.omnidroid.app.mobile.shared.controller.controllerFocusGlow
 import com.omnidroid.app.shared.covers.CoverUtils
 import com.omnidroid.app.utils.games.GameUtils
@@ -177,12 +185,19 @@ fun GameDetailsScreen(
         if (targetState == EnterExitState.Visible) 0f else 28f
     }
 
+    val playFocusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(150)
+        runCatching { playFocusRequester.requestFocus() }
+    }
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
                 .background(HomeChromeBackground),
     ) {
+        YunoBubbleBackground(modifier = Modifier.fillMaxSize())
         Box(
             modifier =
                 Modifier
@@ -234,6 +249,7 @@ fun GameDetailsScreen(
                     modifier = detailsModifier.then(infoModifier),
                     game = game,
                     state = state,
+                    playFocusRequester = playFocusRequester,
                     onPlay = { onPlay(game) },
                     onFavoriteToggle = { onFavoriteToggle(game, !game.isFavorite) },
                     onOpenSettings = { onOpenSettings(game) },
@@ -548,15 +564,16 @@ private fun GameTrailerPlayer(
     )
 }
 
-private val DetailsActionCorner = RoundedCornerShape(4.dp)
+private val DetailsActionCorner = RoundedCornerShape(14.dp)
 private val DetailsActionHeight = 52.dp
-private val DetailsActionFill = Color(0xFF161616)
+private val DetailsActionFill = Color(0xFF2B2830)
 
 @Composable
 private fun GameDetailsInfo(
     modifier: Modifier,
     game: Game,
     state: GameDetailsViewModel.UiState,
+    playFocusRequester: FocusRequester,
     onPlay: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -678,6 +695,7 @@ private fun GameDetailsInfo(
 
         GameDetailsActions(
             isFavorite = game.isFavorite,
+            playFocusRequester = playFocusRequester,
             onPlay = onPlay,
             onFavoriteToggle = onFavoriteToggle,
             onOpenSettings = onOpenSettings,
@@ -688,6 +706,7 @@ private fun GameDetailsInfo(
 @Composable
 private fun GameDetailsActions(
     isFavorite: Boolean,
+    playFocusRequester: FocusRequester,
     onPlay: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -698,14 +717,18 @@ private fun GameDetailsActions(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Surface(
-            onClick = onPlay,
+            onClick = {
+                YunoSoundManager.playEnter()
+                onPlay()
+            },
             modifier =
                 Modifier
                     .weight(1f)
                     .height(DetailsActionHeight)
-                    .controllerFocusGlow(DetailsActionCorner),
+                    .focusRequester(playFocusRequester)
+                    .controllerFocusGlow(DetailsActionCorner, strokeWidth = 2.5.dp, glowWidth = 6.dp),
             shape = DetailsActionCorner,
-            color = LibraryNeonGreen,
+            color = YunoPurpleContainer,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -713,7 +736,7 @@ private fun GameDetailsActions(
             ) {
                 Text(
                     text = stringResource(R.string.game_play),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
@@ -722,11 +745,14 @@ private fun GameDetailsActions(
             }
         }
         Surface(
-            onClick = onFavoriteToggle,
+            onClick = {
+                YunoSoundManager.playEnter()
+                onFavoriteToggle()
+            },
             modifier =
                 Modifier
                     .size(DetailsActionHeight)
-                    .controllerFocusGlow(DetailsActionCorner),
+                    .controllerFocusGlow(DetailsActionCorner, strokeWidth = 2.5.dp, glowWidth = 6.dp),
             shape = DetailsActionCorner,
             color = DetailsActionFill,
         ) {
@@ -734,17 +760,20 @@ private fun GameDetailsActions(
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = stringResource(R.string.favorites),
-                    tint = if (isFavorite) LibraryNeonGreen else Color.White,
+                    tint = if (isFavorite) YunoFavoriteRed else Color.White,
                     modifier = Modifier.size(26.dp),
                 )
             }
         }
         Surface(
-            onClick = onOpenSettings,
+            onClick = {
+                YunoSoundManager.playEnter()
+                onOpenSettings()
+            },
             modifier =
                 Modifier
                     .size(DetailsActionHeight)
-                    .controllerFocusGlow(DetailsActionCorner),
+                    .controllerFocusGlow(DetailsActionCorner, strokeWidth = 2.5.dp, glowWidth = 6.dp),
             shape = DetailsActionCorner,
             color = DetailsActionFill,
         ) {

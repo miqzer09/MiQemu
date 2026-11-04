@@ -21,6 +21,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -224,14 +229,14 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     onResult(pendingResult)
                 }
                 if (panelState.targetState && panelState.isIdle) {
-                    yield()
+                    delay(50)
                     runCatching { controllerNav.contentFocusRequester?.requestFocus() }
                 }
             }
 
             LaunchedEffect(currentRoute) {
                 controllerNav.setHints(hints)
-                yield()
+                delay(100)
                 runCatching { controllerNav.contentFocusRequester?.requestFocus() }
             }
 
@@ -271,10 +276,10 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                             Modifier
                                 .fillMaxSize()
                                 .background(Color.Black.copy(alpha = scrimAlpha))
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                ) { requestClose() },
+                                .focusProperties { canFocus = false }
+                                .pointerInput(Unit) {
+                                    detectTapGestures { requestClose() }
+                                },
                     )
 
                     AnimatedVisibility(
@@ -290,7 +295,13 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                             ) { it },
                     ) {
                         Surface(
-                            modifier = Modifier.fillMaxHeight().width(panelWidth),
+                            modifier =
+                                Modifier
+                                    .fillMaxHeight()
+                                    .width(panelWidth)
+                                    .onFocusChanged {
+                                        controllerBridge.hasMenuFocus = it.hasFocus
+                                    },
                             color = HomeChromeBackground,
                             contentColor = Color.White,
                             shape = RectangleShape,
@@ -472,29 +483,27 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && isNavigationKey(event.keyCode)) {
+        if (!controllerBridge.hasMenuFocus && event.action == KeyEvent.ACTION_DOWN && isNavigationDirectionKey(event.keyCode)) {
             runCatching { controllerBridge.navigation?.contentFocusRequester?.requestFocus() }
         }
         return controllerBridge.dispatchKey(event) { super.dispatchKeyEvent(it) }
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        runCatching { controllerBridge.navigation?.contentFocusRequester?.requestFocus() }
+        if (!controllerBridge.hasMenuFocus) {
+            runCatching { controllerBridge.navigation?.contentFocusRequester?.requestFocus() }
+        }
         if (controllerBridge.dispatchMotion(event) { super.dispatchKeyEvent(it) }) {
             return true
         }
         return super.dispatchGenericMotionEvent(event)
     }
 
-    private fun isNavigationKey(keyCode: Int): Boolean {
+    private fun isNavigationDirectionKey(keyCode: Int): Boolean {
         return keyCode == KeyEvent.KEYCODE_DPAD_UP ||
             keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
             keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
-            keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ||
-            keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
-            keyCode == KeyEvent.KEYCODE_BUTTON_A ||
-            keyCode == KeyEvent.KEYCODE_BUTTON_1 ||
-            keyCode == KeyEvent.KEYCODE_ENTER
+            keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
     }
 
     override fun onResume() {

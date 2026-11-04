@@ -38,8 +38,8 @@ android {
         abi {
             isEnable = !usePlayDynamicFeatures()
             reset()
-            include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
-            isUniversalApk = true
+            include("armeabi-v7a")
+            isUniversalApk = false
         }
     }
     flavorDimensions += listOf("opensource", "cores")
@@ -103,7 +103,7 @@ android {
         jniLibs {
             // Stripping created issues with ppsspp; narrow to only ppsspp
             keepDebugSymbols += setOf("*/*/libppsspp_libretro_android.so")
-            pickFirsts += setOf("**/liblibretrodroid.so")
+            pickFirsts += setOf("**/liblibretrodroid.so", "**/libc++_shared.so")
             useLegacyPackaging = true
         }
         resources {
@@ -113,6 +113,9 @@ android {
                 "org/apache/commons/codec/**",
                 "mozilla/public-suffix-list.txt",
                 "com/google/api/client/googleapis/google.jks",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+                "META-INF/beans.xml",
             )
         }
     }
@@ -176,12 +179,12 @@ android {
             isShrinkResources = true
             signingConfig = signingConfigs["release"]
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            resValue("string", "omnidroid_name", "Omnidroid")
+            resValue("string", "omnidroid_name", "MiQemu")
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            resValue("string", "omnidroid_name", "OmnidroidDebug")
+            resValue("string", "omnidroid_name", "MiQemu")
         }
     }
 

@@ -68,6 +68,7 @@ import com.omnidroid.app.mobile.feature.cast.CastPickerSheet
 import com.omnidroid.app.mobile.feature.gamedetails.GameDetailsScreen
 import com.omnidroid.app.mobile.feature.gamedetails.GameDetailsViewModel
 import com.omnidroid.app.mobile.feature.library.LibraryFilter
+import com.omnidroid.app.mobile.feature.library.LibraryLayout
 import com.omnidroid.app.mobile.feature.library.LibraryScreen
 import com.omnidroid.app.mobile.feature.library.LibraryTopBar
 import com.omnidroid.app.mobile.feature.library.LibraryTopBarPortraitHeight
@@ -102,6 +103,8 @@ import com.omnidroid.app.mobile.feature.settings.unrecognized.UnrecognizedFilesV
 import com.omnidroid.app.mobile.shared.compose.ui.AppTheme
 import com.omnidroid.app.mobile.shared.compose.ui.HomeChromeBackground
 import com.omnidroid.app.mobile.shared.compose.ui.LocalAdaptiveLayout
+import com.omnidroid.app.mobile.shared.compose.ui.YunoSoundManager
+import com.omnidroid.app.mobile.shared.compose.ui.YunoTopBar
 import com.omnidroid.app.mobile.shared.compose.ui.calculateAdaptiveLayoutSpec
 import com.omnidroid.app.mobile.shared.controller.ControllerHintBar
 import com.omnidroid.app.mobile.shared.controller.ControllerHints
@@ -225,6 +228,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
         super.onCreate(savedInstanceState)
         hideSystemBars()
         ensureLegacyStoragePermissionsIfNeeded()
+        YunoSoundManager.init(this)
 
         OmnidroidApplication.scope(this).safeLaunch {
             reviewManager.initialize(applicationContext)
@@ -349,11 +353,13 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     requestedOrientation = orientation
                 }
             }
-            val gamepadConnected =
+            val isTvDevice = TVHelper.isTV(this)
+            val hasPhysicalGamepad =
                 inputDeviceManager.getGamePadsObservable()
                     .collectAsState(emptyList())
                     .value
                     .any { it.getOmnidroidInputDevice() is OmnidroidInputDeviceGamePad }
+            val gamepadConnected = isTvDevice || hasPhysicalGamepad
 
             val libraryHints =
                 ControllerHints.library(
@@ -402,8 +408,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             }
 
             controllerNav.onBack = {
-                if (controllerNav.textInputActive || controllerNav.searchArmed.value) {
+                if (controllerNav.textInputActive || controllerNav.searchArmed.value || libraryState.searchQuery.isNotBlank()) {
                     controllerNav.dismissSearch()
+                    libraryViewModel.clearSearchQuery()
                 } else if (selectedGameState.value != null) {
                     selectedGameState.value = null
                 } else if (currentRoute == MainRoute.GAME_DETAILS) {
@@ -479,6 +486,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             BackHandler(enabled = !detailsBackIsAPlainPop) {
                 if (selectedGameState.value != null) {
                     selectedGameState.value = null
+                } else if (controllerNav.searchArmed.value || libraryState.searchQuery.isNotEmpty()) {
+                    libraryViewModel.clearSearchQuery()
+                    controllerNav.searchArmed.value = false
                 } else if (currentRoute == MainRoute.GAME_DETAILS) {
                     closeGameDetails()
                 } else {
@@ -499,8 +509,8 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             val portraitHome = libraryState.portrait && currentRoute == MainRoute.HOME
             val portraitColumnWidth = maxWidth
             val libraryTopPadding =
-                if (portraitHome) adaptiveSpec.topBarPortraitHeight else adaptiveSpec.topBarRowHeight
-            val standardTopPadding = adaptiveSpec.topBarRowHeight
+                if (portraitHome) adaptiveSpec.topBarPortraitHeight else (adaptiveSpec.topBarRowHeight + 16.dp)
+            val standardTopPadding = adaptiveSpec.topBarRowHeight + 16.dp
             CompositionLocalProvider(
                 LocalControllerNavigation provides controllerNav,
                 LocalAdaptiveLayout provides adaptiveSpec,
@@ -916,42 +926,76 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
                 label = "topBarCompactProgress",
             )
-            LibraryTopBar(
-                modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
-                operationInProgress =
-                    libraryState.operationInProgress || mainUIState.operationInProgress,
-                syncProgress = libraryState.syncProgress,
-                gamepadConnected = gamepadConnected,
-                onRandomPressed = {
-                    scope.launch { libraryViewModel.randomGame()?.let(openGameDetails) }
-                },
-                sort = libraryState.sort,
-                onSortChange = { libraryViewModel.setSort(it) },
-                onCastPressed = {
-                    castDisplayManager.refresh()
-                    showCastPicker.value = true
-                },
-                onSettingsPressed = { navController.navigateToRoute(MainRoute.SETTINGS) },
-                onProfilePressed = { navController.navigateToRoute(MainRoute.PROFILE) },
-                overlayTitleId =
-                    currentRoute.takeIf {
-                        it != MainRoute.HOME && it != MainRoute.GAME_DETAILS
-                    }?.titleId,
-                onBackPressed = {
-                    navController.popBackStack()
-                },
-                compactProgress = compactProgress,
-                searchQuery = libraryState.searchQuery,
-                onSearchQueryChange = { libraryViewModel.changeQueryString(it) },
-                onClearSearch = { libraryViewModel.clearSearchQuery() },
-                casting = castState.isCasting,
-                consoleTitleId =
-                    (libraryState.filter as? LibraryFilter.System)?.metaSystemID?.titleResId,
-                consoleGameCount = libraryState.selectedSystemGameCount,
-                portrait = libraryState.portrait,
-                portraitColumnWidth = portraitColumnWidth,
-                detailsMode = currentRoute == MainRoute.GAME_DETAILS,
-            )
+            val isSearchActive = controllerNav.searchArmed.value || libraryState.searchQuery.isNotBlank()
+            if (currentRoute == MainRoute.HOME) {
+                YunoTopBar(
+                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
+                    focusedGame = controllerNav.focusedGame.value,
+                    searchQuery = libraryState.searchQuery,
+                    searchActive = isSearchActive,
+                    onSearchQueryChange = { libraryViewModel.changeQueryString(it) },
+                    onClearSearch = {
+                        libraryViewModel.clearSearchQuery()
+                        controllerNav.searchArmed.value = false
+                    },
+                    onToggleSearch = {
+                        if (isSearchActive) {
+                            libraryViewModel.clearSearchQuery()
+                            controllerNav.searchArmed.value = false
+                        } else {
+                            controllerNav.searchArmed.value = true
+                        }
+                    },
+                    onMenuClick = {
+                        libraryViewModel.cycleFilter(1)
+                    },
+                    onSettingsClick = {
+                        navController.navigateToRoute(MainRoute.SETTINGS)
+                    },
+                    onProfileClick = {
+                        navController.navigateToRoute(MainRoute.PROFILE)
+                    },
+                    onJoystickClick = {
+                        navController.navigateToRoute(MainRoute.SETTINGS_INPUT_DEVICES)
+                    },
+                    gamepadConnected = gamepadConnected,
+                )
+            } else if (currentRoute == MainRoute.GAME_DETAILS) {
+                val gameTitle = lastClickedGame?.customName?.takeIf { it.isNotBlank() } ?: lastClickedGame?.title ?: "GAME DETAILS"
+                YunoTopBar(
+                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
+                    customTitle = gameTitle,
+                    showBackButton = true,
+                    onBackClick = { navController.popBackStack() },
+                    showSearchAndSettings = false,
+                    onProfileClick = { navController.navigateToRoute(MainRoute.PROFILE) },
+                    onJoystickClick = { navController.navigateToRoute(MainRoute.SETTINGS_INPUT_DEVICES) },
+                    gamepadConnected = gamepadConnected,
+                )
+            } else if (currentRoute == MainRoute.SETTINGS) {
+                YunoTopBar(
+                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
+                    customTitle = "SETTINGS",
+                    showBackButton = true,
+                    onBackClick = { navController.popBackStack() },
+                    showSearchAndSettings = false,
+                    onProfileClick = { navController.navigateToRoute(MainRoute.PROFILE) },
+                    onJoystickClick = { navController.navigateToRoute(MainRoute.SETTINGS_INPUT_DEVICES) },
+                    gamepadConnected = gamepadConnected,
+                )
+            } else {
+                val routeTitle = currentRoute?.titleId?.let { stringResource(it) } ?: "OMNIDROID"
+                YunoTopBar(
+                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
+                    customTitle = routeTitle,
+                    showBackButton = true,
+                    onBackClick = { navController.popBackStack() },
+                    showSearchAndSettings = false,
+                    onProfileClick = { navController.navigateToRoute(MainRoute.PROFILE) },
+                    onJoystickClick = { navController.navigateToRoute(MainRoute.SETTINGS_INPUT_DEVICES) },
+                    gamepadConnected = gamepadConnected,
+                )
+            }
             }
             }
         }

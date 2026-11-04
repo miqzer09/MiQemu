@@ -42,7 +42,7 @@ data class GameSystem(
         get() = when (id) {
             SystemID.GB, SystemID.GBC, SystemID.GG -> 10f / 9f
             SystemID.GBA -> 3f / 2f
-            SystemID.PSP, SystemID.WII_U -> 16f / 9f
+            SystemID.PSP, SystemID.WII_U, SystemID.N64 -> 16f / 9f
             SystemID.NDS, SystemID.NINTENDO_3DS -> 4f / 6f
             SystemID.WS, SystemID.WSC -> 14f / 9f
             SystemID.NGP -> 20f / 19f
@@ -110,6 +110,26 @@ data class GameSystem(
                             exposedSettings =
                                 listOf(
                                     ExposedSetting(
+                                        "fceumm_turbo_enable",
+                                        R.string.setting_fceumm_turbo_enable,
+                                        arrayListOf(
+                                            ExposedSetting.Value("Both", R.string.value_fceumm_turbo_both),
+                                            ExposedSetting.Value("Player 1", R.string.value_fceumm_turbo_player1),
+                                            ExposedSetting.Value("Player 2", R.string.value_fceumm_turbo_player2),
+                                            ExposedSetting.Value("None", R.string.value_fceumm_turbo_none),
+                                        ),
+                                    ),
+                                    ExposedSetting(
+                                        "fceumm_turbo_delay",
+                                        R.string.setting_fceumm_turbo_delay,
+                                        arrayListOf(
+                                            ExposedSetting.Value("1", R.string.value_fceumm_turbo_delay_fastest),
+                                            ExposedSetting.Value("2", R.string.value_fceumm_turbo_delay_fast),
+                                            ExposedSetting.Value("3", R.string.value_fceumm_turbo_delay_normal),
+                                            ExposedSetting.Value("5", R.string.value_fceumm_turbo_delay_slow),
+                                        ),
+                                    ),
+                                    ExposedSetting(
                                         "fceumm_overscan_h",
                                         R.string.setting_fceumm_overscan_h,
                                     ),
@@ -128,6 +148,14 @@ data class GameSystem(
                             controllerConfigs =
                                 hashMapOf(
                                     0 to arrayListOf(ControllerConfigs.NES),
+                                ),
+                            defaultSettings =
+                                listOf(
+                                    CoreVariable("fceumm_nospritelimit", "enabled"),
+                                    CoreVariable("fceumm_overscan_h", "disabled"),
+                                    CoreVariable("fceumm_overscan_v", "disabled"),
+                                    CoreVariable("fceumm_turbo_enable", "Both"),
+                                    CoreVariable("fceumm_turbo_delay", "3"),
                                 ),
                         ),
                     ),
@@ -300,6 +328,7 @@ data class GameSystem(
                                         ),
                                     ),
                                 ),
+
                         ),
                     ),
                     uniqueExtensions = listOf("smc", "sfc", "fig", "swc", "bs"),
@@ -373,6 +402,12 @@ data class GameSystem(
                             controllerConfigs =
                                 hashMapOf(
                                     0 to arrayListOf(ControllerConfigs.SMS),
+                                ),
+                            defaultSettings =
+                                listOf(
+                                    CoreVariable("genesis_plus_gx_blargg_ntsc_filter", "disabled"),
+                                    CoreVariable("genesis_plus_gx_no_sprite_limit", "enabled"),
+                                    CoreVariable("genesis_plus_gx_overscan", "disabled"),
                                 ),
                         ),
                     ),
@@ -467,6 +502,12 @@ data class GameSystem(
                                                 ControllerConfigs.GENESIS_6,
                                             ),
                                 ),
+                            defaultSettings =
+                                listOf(
+                                    CoreVariable("genesis_plus_gx_blargg_ntsc_filter", "disabled"),
+                                    CoreVariable("genesis_plus_gx_no_sprite_limit", "enabled"),
+                                    CoreVariable("genesis_plus_gx_overscan", "disabled"),
+                                ),
                         ),
                     ),
                     uniqueExtensions = listOf("gen", "smd", "md"),
@@ -560,6 +601,12 @@ data class GameSystem(
                                                 ControllerConfigs.GENESIS_6,
                                             ),
                                 ),
+                            defaultSettings =
+                                listOf(
+                                    CoreVariable("genesis_plus_gx_blargg_ntsc_filter", "disabled"),
+                                    CoreVariable("genesis_plus_gx_no_sprite_limit", "enabled"),
+                                    CoreVariable("genesis_plus_gx_overscan", "disabled"),
+                                ),
                             regionalBIOSFiles =
                                 mapOf(
                                     "Europe" to "bios_CD_E.bin",
@@ -596,6 +643,11 @@ data class GameSystem(
                             controllerConfigs =
                                 hashMapOf(
                                     0 to arrayListOf(ControllerConfigs.GG),
+                                ),
+                            defaultSettings =
+                                listOf(
+                                    CoreVariable("genesis_plus_gx_lcd_filter", "disabled"),
+                                    CoreVariable("genesis_plus_gx_no_sprite_limit", "enabled"),
                                 ),
                         ),
                     ),
@@ -650,6 +702,7 @@ data class GameSystem(
                                 listOf(
                                     CoreVariable("gambatte_gb_colorization", "internal"),
                                     CoreVariable("gambatte_gb_internal_palette", "GB - Pocket"),
+                                    CoreVariable("gambatte_mix_frames", "disabled"),
                                 ),
                             controllerConfigs =
                                 hashMapOf(
@@ -714,6 +767,7 @@ data class GameSystem(
                             defaultSettings =
                                 listOf(
                                     CoreVariable("gambatte_gbc_color_correction", "disabled"),
+                                    CoreVariable("gambatte_mix_frames", "disabled"),
                                 ),
                             controllerConfigs =
                                 hashMapOf(
@@ -786,6 +840,12 @@ data class GameSystem(
                                     ),
                                 ),
                             rumbleSupported = true,
+                            defaultSettings =
+                                listOf(
+                                    CoreVariable("mgba_color_correction", "OFF"),
+                                    CoreVariable("mgba_interframe_blending", "OFF"),
+                                    CoreVariable("mgba_frameskip", "disabled"),
+                                ),
                             controllerConfigs =
                                 hashMapOf(
                                     0 to arrayListOf(ControllerConfigs.GBA),
@@ -809,16 +869,16 @@ data class GameSystem(
                                         R.string.setting_mupen64plus_aspect,
                                         arrayListOf(
                                             ExposedSetting.Value(
-                                                "4:3",
-                                                R.string.value_mupen64plus_aspect_4_3,
+                                                "16:9 adjusted",
+                                                R.string.value_mupen64plus_aspect_16_9_adjusted,
                                             ),
                                             ExposedSetting.Value(
                                                 "16:9",
                                                 R.string.value_mupen64plus_aspect_16_9,
                                             ),
                                             ExposedSetting.Value(
-                                                "16:9 adjusted",
-                                                R.string.value_mupen64plus_aspect_16_9_adjusted,
+                                                "4:3",
+                                                R.string.value_mupen64plus_aspect_4_3,
                                             ),
                                         ),
                                     ),
@@ -966,12 +1026,31 @@ data class GameSystem(
                                 ),
                             defaultSettings =
                                 listOf(
-                                    CoreVariable("mupen64plus-aspect", "4:3"),
-                                    CoreVariable("mupen64plus-43screensize", "320x240"),
-                                    CoreVariable("mupen64plus-169screensize", "640x360"),
+                                    CoreVariable("mupen64plus-GLideN64IniBehaviour", "early"),
+                                    CoreVariable("mupen64plus-aspect", "16:9 adjusted"),
+                                    CoreVariable("mupen64plus-43screensize", "640x480"),
+                                    CoreVariable("mupen64plus-169screensize", "960x540"),
                                     CoreVariable("mupen64plus-MSAA", "0"),
+                                    CoreVariable("mupen64plus-FXAA", "0"),
+                                    CoreVariable("mupen64plus-BilinearMode", "standard"),
+                                    CoreVariable("mupen64plus-HybridFilter", "False"),
                                     CoreVariable("mupen64plus-CropMode", "Auto"),
-                                    CoreVariable("mupen64plus-FrameDuping", "True"),
+                                    CoreVariable("mupen64plus-FrameDuping", "False"),
+                                    CoreVariable("mupen64plus-cpucore", "dynamic_recompiler"),
+                                    CoreVariable("mupen64plus-rdp-plugin", "gliden64"),
+                                    CoreVariable("mupen64plus-rsp-plugin", "hle"),
+                                    CoreVariable("mupen64plus-MaxTxCacheSize", "8000"),
+                                    CoreVariable("mupen64plus-EnableTextureCache", "False"),
+                                    CoreVariable("mupen64plus-ThreadedRenderer", "False"),
+                                    CoreVariable("mupen64plus-EnableFBEmulation", "False"),
+                                    CoreVariable("mupen64plus-EnableCopyColorToRDRAM", "Off"),
+                                    CoreVariable("mupen64plus-EnableCopyDepthToRDRAM", "Off"),
+                                    CoreVariable("mupen64plus-EnableCopyAuxToRDRAM", "False"),
+                                    CoreVariable("mupen64plus-EnableCopyColorFromRDRAM", "False"),
+                                    CoreVariable("mupen64plus-EnableLegacyBlending", "True"),
+                                    CoreVariable("mupen64plus-EnableLODEmulation", "False"),
+                                    CoreVariable("mupen64plus-CorrectTexrectCoords", "Off"),
+                                    CoreVariable("mupen64plus-virefresh", "Auto"),
                                 ),
                             controllerConfigs =
                                 hashMapOf(
@@ -979,6 +1058,7 @@ data class GameSystem(
                                 ),
                             rumbleSupported = true,
                             skipDuplicateFrames = false,
+                            forceStandardAudioBuffer = true,
                         ),
                     ),
                     uniqueExtensions = listOf("n64", "z64", "v64"),
@@ -1035,12 +1115,12 @@ data class GameSystem(
                                         R.string.setting_pcsx_rearmed_neon_enhancement_enable,
                                         arrayListOf(
                                             ExposedSetting.Value(
-                                                "disabled",
-                                                R.string.value_pcsx_rearmed_res_1x,
-                                            ),
-                                            ExposedSetting.Value(
                                                 "enabled",
                                                 R.string.value_pcsx_rearmed_res_2x,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "disabled",
+                                                R.string.value_pcsx_rearmed_res_1x,
                                             ),
                                         ),
                                     ),
@@ -1088,15 +1168,25 @@ data class GameSystem(
                                 ),
                             defaultSettings =
                                 listOf(
-                                    CoreVariable("pcsx_rearmed_drc", "disabled"),
-                                    CoreVariable("pcsx_rearmed_aspect_ratio", "4:3"),
-                                    CoreVariable("pcsx_rearmed_neon_enhancement_enable", "disabled"),
+                                    CoreVariable("pcsx_rearmed_drc", "enabled"),
+                                    CoreVariable("pcsx_rearmed_aspect_ratio", "16:9"),
+                                    CoreVariable("pcsx_rearmed_neon_enhancement_enable", "enabled"),
                                     CoreVariable("pcsx_rearmed_neon_enhancement_no_main", "disabled"),
-                                    CoreVariable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "disabled"),
+                                    CoreVariable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "enabled"),
+                                    CoreVariable("pcsx_rearmed_neon_interlace_enable_v2", "disabled"),
+                                    CoreVariable("pcsx_rearmed_dithering", "disabled"),
+                                    CoreVariable("pcsx_rearmed_rgb32_output", "enabled"),
+                                    CoreVariable("pcsx_rearmed_spu_thread", "enabled"),
+                                    CoreVariable("pcsx_rearmed_gpu_thread_rendering", "enabled"),
+                                    CoreVariable("pcsx_rearmed_spu_interpolation", "cubic"),
+                                    CoreVariable("pcsx_rearmed_spu_reverb", "enabled"),
+                                    CoreVariable("pcsx_rearmed_cd_readahead", "1024"),
+                                    CoreVariable("pcsx_rearmed_psxclock", "70"),
                                 ),
                             rumbleSupported = true,
                             supportsLibretroVFS = true,
                             skipDuplicateFrames = false,
+                            forceStandardAudioBuffer = true,
                         ),
                     ),
                     uniqueExtensions = listOf(),

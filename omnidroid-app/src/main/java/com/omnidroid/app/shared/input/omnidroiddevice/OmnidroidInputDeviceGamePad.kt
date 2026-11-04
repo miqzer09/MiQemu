@@ -21,12 +21,21 @@ class OmnidroidInputDeviceGamePad(private val device: InputDevice) : OmnidroidIn
                     InputKey(it.keyCode) to getDefaultBindingForKey(device, it)
                 }
 
+        // Follows mupen64plus-ae's [Xbox] controller profile (assets/mupen64plus_data/profiles/controller.cfg):
+        // N64 A on the bottom face button (6:99 style: N64 controls live on A/X), shoulders on L1/R1,
+        // triggers as L2/R2. The RetroPad A/X ids are only consumed by the core as C-buttons while
+        // the C-mode modifier is held, so the remaining face buttons get real N64 functions:
+        // B = Z trigger (same as the left-trigger axis path) and Y = C-button mode modifier.
         val defaultOverride =
             bindingsOf(
+                // Bottom face button -> RetroPad B = N64 A.
                 KeyEvent.KEYCODE_BUTTON_A to KeyEvent.KEYCODE_BUTTON_B,
-                KeyEvent.KEYCODE_BUTTON_B to KeyEvent.KEYCODE_BUTTON_A,
+                // Left face button -> RetroPad Y = N64 B (mupen64plus-ae [Xbox] 6:99 pattern).
                 KeyEvent.KEYCODE_BUTTON_X to KeyEvent.KEYCODE_BUTTON_Y,
-                KeyEvent.KEYCODE_BUTTON_Y to KeyEvent.KEYCODE_BUTTON_X,
+                // Right face button -> RetroPad L2 = N64 Z.
+                KeyEvent.KEYCODE_BUTTON_B to KeyEvent.KEYCODE_BUTTON_L2,
+                // Top face button -> RetroPad R2 = C-buttons mode modifier.
+                KeyEvent.KEYCODE_BUTTON_Y to KeyEvent.KEYCODE_BUTTON_R2,
             )
 
         return allAvailableInputs + defaultOverride

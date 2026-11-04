@@ -24,6 +24,12 @@ object InputClassGamePad : InputClass {
 
     private val INPUT_KEYS =
         inputKeySetOf(
+            // Digital d-pad key events (controllers that report the hat as keys rather
+            // than axes) must be forwarded, otherwise N64 loses UP/DOWN/LEFT/RIGHT.
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_BUTTON_A,
             KeyEvent.KEYCODE_BUTTON_B,
             KeyEvent.KEYCODE_BUTTON_X,

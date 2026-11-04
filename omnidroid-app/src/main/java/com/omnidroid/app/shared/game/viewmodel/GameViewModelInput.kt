@@ -11,8 +11,10 @@ import androidx.lifecycle.LifecycleOwner
 import com.omnidroid.R
 import com.omnidroid.app.shared.input.InputDeviceManager
 import com.omnidroid.app.shared.input.InputKey
+import com.omnidroid.app.shared.input.RetroKey
 import com.omnidroid.app.shared.input.inputclass.getInputClass
 import com.omnidroid.app.shared.settings.ControllerConfigsManager
+import com.omnidroid.app.shared.settings.GameShortcut
 import com.omnidroid.app.shared.settings.GameShortcutType
 import com.omnidroid.common.coroutines.launchOnState
 import com.omnidroid.common.coroutines.safeCollect
@@ -30,7 +32,10 @@ import com.swordfish.libretrodroid.GLRetroView.Companion.MOTION_SOURCE_ANALOG_LE
 import com.swordfish.libretrodroid.GLRetroView.Companion.MOTION_SOURCE_ANALOG_RIGHT
 import com.swordfish.libretrodroid.GLRetroView.Companion.MOTION_SOURCE_DPAD
 import com.omnidroid.touchinput.radial.sensors.TiltConfiguration
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,9 +65,22 @@ class GameViewModelInput(
 ) : DefaultLifecycleObserver {
     private data class SingleAxisEvent(val axis: Int, val action: Int, val keyCode: Int, val port: Int)
 
+    // Snapshot of the (InputDevice?) -> Int? port mapper, bindings and shortcuts. These are collected
+    // into plain fields by their own collectors so that the hot key/motion collectors can subscribe
+    // immediately at ViewModel creation instead of waiting inside combine() for a preference flow's
+    // first emission - a stall that left all gamepad input dead in some sessions.
+    private val portMapperState = MutableStateFlow<(InputDevice?) -> Int?> { null }
+    private val bindingsState = MutableStateFlow<(InputDevice?) -> Map<InputKey, RetroKey>> { emptyMap() }
+    private val shortcutsState = MutableStateFlow<Map<InputDevice, List<GameShortcut>>>(emptyMap())
+
     private val controllerConfigsState = MutableStateFlow<Map<Int, ControllerConfig>>(mapOf())
-    private val keyEventsFlow: MutableSharedFlow<KeyEvent?> = MutableSharedFlow()
-    private val motionEventsFlow: MutableSharedFlow<MotionEvent> = MutableSharedFlow()
+
+    // Buffered shared flows so a (re)starting collector cannot lose events, and tryEmit below
+    // never suspends. DROP_OLDEST keeps the most recent input states during collector restarts.
+    private val keyEventsFlow: MutableSharedFlow<KeyEvent> =
+        MutableSharedFlow(extraBufferCapacity = 64, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val motionEventsFlow: MutableSharedFlow<MotionEvent> =
+        MutableSharedFlow(extraBufferCapacity = 128, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     fun getAllTiltConfigurations(): List<TiltConfiguration> {
         return controllerConfigsState.value[0]
@@ -79,14 +97,17 @@ class GameViewModelInput(
         port: Int,
     ) {
         if (port < 0) return
-        when (event.source) {
-            InputDevice.SOURCE_JOYSTICK -> {
-                if (controllerConfigsState.value[port]?.mergeDPADAndLeftStickEvents == true) {
-                    sendMergedMotionEvents(event, port)
-                } else {
-                    sendSeparateMotionEvents(event, port)
-                }
-            }
+        // Controllers report a source *mask*, not a single source. An Xbox pad reports
+        // JOYSTICK|GAMEPAD (0x01000511), so an equality check against SOURCE_JOYSTICK is
+        // never true and every stick and hat event is silently dropped - the d-pad and
+        // analog stick then look dead while buttons keep working.
+        if (event.source and InputDevice.SOURCE_JOYSTICK != InputDevice.SOURCE_JOYSTICK) {
+            return
+        }
+        if (controllerConfigsState.value[port]?.mergeDPADAndLeftStickEvents == true) {
+            sendMergedMotionEvents(event, port)
+        } else {
+            sendSeparateMotionEvents(event, port)
         }
     }
 
@@ -180,19 +201,16 @@ class GameViewModelInput(
         keyCode: Int,
         event: KeyEvent,
     ): Boolean {
-        if (InputKey(keyCode) in event.device.getInputClass().getInputKeys()) {
-            scope.launch {
-                keyEventsFlow.emit(event)
-            }
+        val accepted = InputKey(keyCode) in event.device.getInputClass().getInputKeys()
+        if (accepted) {
+            keyEventsFlow.tryEmit(event)
             return true
         }
         return false
     }
 
     fun sendMotionEvent(event: MotionEvent): Boolean {
-        scope.launch {
-            motionEventsFlow.emit(event)
-        }
+        motionEventsFlow.tryEmit(event)
         return true
     }
 
@@ -217,9 +235,16 @@ class GameViewModelInput(
         }
 
         supportedControllers.forEach { (port, supported) ->
+            Timber.i("CONTROLLERS port=%d: %s", port, supported.joinToString { "${it.id}:${it.description}" })
             val config = controllers[port]
             if (config != null) {
-                val controllerId = findControllerId(supported, config) ?: config.libretroId
+                // Never leave a port on the library default: when the system config defines no
+                // matching id/descriptor (N64 does), fall back to the most capable supported
+                // controller class instead of skipping setControllerType for this port.
+                val controllerId =
+                    findControllerId(supported, config)
+                        ?: config.libretroId
+                        ?: supported.lastOrNull()?.id
                 if (controllerId != null) {
                     Timber.i("Controls setting $port to $controllerId (${config.libretroDescriptor})")
                     retroGameView.retroGameView?.setControllerType(port, controllerId)
@@ -227,6 +252,13 @@ class GameViewModelInput(
             } else if (port > 0) {
                 Timber.i("Controls disconnecting unused port $port")
                 retroGameView.retroGameView?.setControllerType(port, 0)
+            } else {
+                // Port 0 has no per-system controller config: never leave it on the library
+                // default, which may lack the analog device the core needs for sticks. Pick the
+                // most capable class (conventionally the last entry, the analog-capable pad).
+                val fallbackId = supported.lastOrNull()?.id
+                Timber.i("Controls fallback port 0 to $fallbackId")
+                fallbackId?.let { retroGameView.retroGameView?.setControllerType(port, it) }
             }
         }
     }
@@ -247,29 +279,45 @@ class GameViewModelInput(
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
 
+        // Every input collector runs under supervision: if a flow dies for any transient reason
+        // (the dead-collector race observed in the field), it restarts within 500 ms instead of
+        // staying silently dead for the rest of the session.
         owner.launchOnState(Lifecycle.State.CREATED) {
-            initializeControllerConfigsFlow()
+            runSupervised("PORTS") { updatePortMapperSnapshot() }
         }
 
         owner.launchOnState(Lifecycle.State.CREATED) {
-            initializeGamePadShortcutsFlow()
+            runSupervised("BINDINGS") { updateBindingsSnapshot() }
         }
 
         owner.launchOnState(Lifecycle.State.CREATED) {
-            initializeGamePadKeysFlow()
+            runSupervised("SHORTCUTS") { updateShortcutsSnapshot() }
         }
 
         owner.launchOnState(Lifecycle.State.CREATED) {
-            initializeVirtualGamePadMotionsFlow()
+            runSupervised("CONFIGS") { initializeControllerConfigsFlow() }
         }
 
         owner.launchOnState(Lifecycle.State.CREATED) {
-            initializeGamePadMotionsFlow()
+            runSupervised("TOAST") { initializeGamePadShortcutsFlow() }
+        }
+
+        owner.launchOnState(Lifecycle.State.CREATED) {
+            runSupervised("KEYS") { initializeGamePadKeysFlow() }
+        }
+
+        owner.launchOnState(Lifecycle.State.CREATED) {
+            runSupervised("VSTICK") { initializeVirtualGamePadMotionsFlow() }
+        }
+
+        owner.launchOnState(Lifecycle.State.CREATED) {
+            runSupervised("MOTIONS") { initializeGamePadMotionsFlow() }
         }
 
         owner.launchOnState(Lifecycle.State.RESUMED) {
             initializeControllersConfigFlow()
         }
+
     }
 
     private suspend fun initializeControllerConfigsFlow() {
@@ -298,35 +346,58 @@ class GameViewModelInput(
             }
     }
 
+    private suspend fun runSupervised(
+        name: String,
+        block: suspend () -> Unit,
+    ) {
+        while (true) {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Timber.e(e, "INPUT %s crashed, restarting", name)
+            } finally {
+                Timber.i("INPUT %s restarting", name)
+            }
+            delay(500)
+        }
+    }
+
+    private suspend fun updatePortMapperSnapshot() {
+        inputDeviceManager.getGamePadsPortMapperObservable()
+            .safeCollect { portMapperState.value = it }
+    }
+
+    private suspend fun updateBindingsSnapshot() {
+        inputDeviceManager.getInputBindingsObservable()
+            .safeCollect { bindingsState.value = it }
+    }
+
+    private suspend fun updateShortcutsSnapshot() {
+        inputDeviceManager.getGameShortcutsObservable()
+            .safeCollect { shortcutsState.value = it }
+    }
+
     private suspend fun initializeGamePadKeysFlow() {
         val pressedKeys = mutableSetOf<Int>()
 
-        val filteredKeyEvents =
-            keyEventsFlow
-                .filterNotNull()
-                .filter { it.repeatCount == 0 }
-                .map { Triple(it.device, it.action, it.keyCode) }
-                .distinctUntilChanged()
-
-        val combinedObservable =
-            combine(
-                inputDeviceManager.getGameShortcutsObservable(),
-                inputDeviceManager.getGamePadsPortMapperObservable(),
-                inputDeviceManager.getInputBindingsObservable(),
-                filteredKeyEvents,
-                ::NTuple4,
-            )
-
-        combinedObservable
-            .onStart { pressedKeys.clear() }
+        keyEventsFlow
+            .filter { it.repeatCount == 0 }
+            .map { Triple(it.device, it.action, it.keyCode) }
+            .distinctUntilChanged()
+            .onStart {
+                Timber.i("KEYS subscribed")
+                pressedKeys.clear()
+            }
             .onCompletion { pressedKeys.clear() }
-            .safeCollect { (shortcuts, ports, bindings, event) ->
-                val (device, action, keyCode) = event
-                val port = ports(device)
-                val bindKeyCode = bindings(device)[InputKey(keyCode)]?.keyCode ?: keyCode
+            .safeCollect { (device, action, keyCode) ->
+                val port = portMapperState.value(device)
+                val bindings = bindingsState.value(device)
+                val bindKeyCode = bindings[InputKey(keyCode)]?.keyCode ?: keyCode
 
                 if (port == 0) {
-                    if (bindKeyCode == KeyEvent.KEYCODE_BUTTON_MODE && action == KeyEvent.ACTION_DOWN) {
+                    if ((bindKeyCode == KeyEvent.KEYCODE_BUTTON_MODE || bindKeyCode == KeyEvent.KEYCODE_MENU) && action == KeyEvent.ACTION_DOWN) {
                         pressedKeys.clear()
                         sideEffects.showMenu(tilt, this)
                         return@safeCollect
@@ -338,7 +409,17 @@ class GameViewModelInput(
                         pressedKeys.remove(keyCode)
                     }
 
-                    shortcuts[device]?.forEach { shortcut ->
+                    val isSelectStart = pressedKeys.contains(KeyEvent.KEYCODE_BUTTON_SELECT) &&
+                        pressedKeys.contains(KeyEvent.KEYCODE_BUTTON_START)
+                    val isL3R3 = pressedKeys.contains(KeyEvent.KEYCODE_BUTTON_THUMBL) &&
+                        pressedKeys.contains(KeyEvent.KEYCODE_BUTTON_THUMBR)
+                    if (isSelectStart || isL3R3) {
+                        pressedKeys.clear()
+                        sideEffects.showMenu(tilt, this)
+                        return@safeCollect
+                    }
+
+                    shortcutsState.value[device]?.forEach { shortcut ->
                         if (shortcut.keys.isNotEmpty() && pressedKeys.containsAll(shortcut.keys)) {
                             when (shortcut.type) {
                                 GameShortcutType.MENU -> {
@@ -361,16 +442,9 @@ class GameViewModelInput(
     }
 
     private suspend fun initializeVirtualGamePadMotionsFlow() {
-        val events =
-            combine(
-                inputDeviceManager.getGamePadsPortMapperObservable(),
-                motionEventsFlow,
-                ::NTuple2,
-            )
-
-        events
-            .mapNotNull { (ports, event) ->
-                ports(event.device)?.let { it to event }
+        motionEventsFlow
+            .mapNotNull { event ->
+                portMapperState.value(event.device)?.let { it to event }
             }
             .map { (port, event) ->
                 val axes = event.device.getInputClass().getAxesMap().entries
@@ -395,16 +469,10 @@ class GameViewModelInput(
     }
 
     private suspend fun initializeGamePadMotionsFlow() {
-        val events =
-            combine(
-                inputDeviceManager.getGamePadsPortMapperObservable(),
-                motionEventsFlow,
-                ::NTuple2,
-            )
-
-        events
-            .safeCollect { (ports, event) ->
-                ports(event.device)?.let {
+        motionEventsFlow
+            .onStart { Timber.i("MOTIONS subscribed") }
+            .safeCollect { event ->
+                portMapperState.value(event.device)?.let {
                     sendStickMotions(event, it)
                 }
             }

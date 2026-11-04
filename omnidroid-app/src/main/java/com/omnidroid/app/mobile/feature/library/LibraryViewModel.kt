@@ -58,7 +58,7 @@ class LibraryViewModel(
         val operationInProgress: Boolean = false,
         val syncProgress: SyncProgress? = null,
         val zoomDensity: Int = 0,
-        val layout: LibraryLayout = LibraryLayout.CONSOLE,
+        val layout: LibraryLayout = LibraryLayout.GRID,
         val portrait: Boolean = false,
         val sort: LibrarySort = LibrarySort.TITLE,
         val selectedSystemGameCount: Int? = null,
@@ -237,10 +237,10 @@ class LibraryViewModel(
     }
 
     private fun readLayout(): LibraryLayout {
-        return when (preferences.getString(LAYOUT_KEY, LibraryLayout.CONSOLE.name)) {
+        return when (preferences.getString(LAYOUT_KEY, LibraryLayout.GRID.name)) {
             LibraryLayout.LIST.name -> LibraryLayout.LIST
-            LibraryLayout.GRID.name -> LibraryLayout.GRID
-            else -> LibraryLayout.CONSOLE
+            LibraryLayout.CONSOLE.name -> LibraryLayout.CONSOLE
+            else -> LibraryLayout.GRID
         }
     }
 
@@ -268,11 +268,10 @@ class LibraryViewModel(
 
     /** Picks up newly added games on launch without prompting for a folder. */
     fun autoSyncLibrary(context: Context) {
-        val folderKey = context.getString(com.omnidroid.lib.R.string.pref_key_extenral_folder)
-        val folder =
-            SharedPreferencesHelper.getLegacySharedPreferences(context)
-                .getString(folderKey, null)
-        if (folder.isNullOrBlank()) return
+        val prefs = SharedPreferencesHelper.getLegacySharedPreferences(context)
+        val safFolder = prefs.getString(context.getString(com.omnidroid.lib.R.string.pref_key_extenral_folder), null)
+        val legacyFolder = prefs.getString(context.getString(com.omnidroid.lib.R.string.pref_key_legacy_external_folder), null)
+        if (safFolder.isNullOrBlank() && legacyFolder.isNullOrBlank()) return
         syncLibrary(context)
     }
 
@@ -289,12 +288,11 @@ class LibraryViewModel(
     fun syncLibrary(context: Context) {
         if (scanRequested.value || state.value.operationInProgress) return
 
-        val folderKey = context.getString(com.omnidroid.lib.R.string.pref_key_extenral_folder)
-        val folder =
-            SharedPreferencesHelper.getLegacySharedPreferences(context)
-                .getString(folderKey, null)
+        val prefs = SharedPreferencesHelper.getLegacySharedPreferences(context)
+        val safFolder = prefs.getString(context.getString(com.omnidroid.lib.R.string.pref_key_extenral_folder), null)
+        val legacyFolder = prefs.getString(context.getString(com.omnidroid.lib.R.string.pref_key_legacy_external_folder), null)
 
-        if (folder.isNullOrBlank()) {
+        if (safFolder.isNullOrBlank() && legacyFolder.isNullOrBlank()) {
             StorageFrameworkPickerLauncher.pickFolder(context)
             return
         }

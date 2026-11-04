@@ -18,6 +18,7 @@ import com.omnidroid.app.mobile.shared.controller.LocalControllerNavigation
 import com.omnidroid.app.utils.android.settings.OmnidroidCardSettingsGroup
 import com.omnidroid.app.utils.android.settings.OmnidroidSettingsMenuLink
 import com.omnidroid.app.utils.android.settings.OmnidroidSettingsPage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
 @Composable
@@ -39,8 +40,15 @@ fun GameMenuStatesScreen(
     }
 
     LaunchedEffect(Unit) {
-        yield()
-        runCatching { firstItemRequester.requestFocus() }
+        repeat(5) {
+            yield()
+            try {
+                firstItemRequester.requestFocus()
+                return@LaunchedEffect
+            } catch (_: Exception) {
+                delay(100)
+            }
+        }
     }
 
     OmnidroidSettingsPage {
