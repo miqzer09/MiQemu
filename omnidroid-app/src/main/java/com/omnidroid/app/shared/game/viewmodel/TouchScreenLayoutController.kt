@@ -71,14 +71,7 @@ class TouchScreenLayoutController(
                     else -> 4f / 3f
                 }
             }
-            CoreID.MUPEN64_PLUS_NEXT -> {
-                val aspectKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-aspect", systemId.dbname)
-                val current = sharedPreferences.getString(aspectKey, null)
-                when (current) {
-                    "4:3" -> 4f / 3f
-                    else -> 16f / 9f
-                }
-            }
+            CoreID.MUPEN64_PLUS_NEXT -> 16f / 9f
             CoreID.DOLPHIN -> {
                 val key = CoreVariablesManager.computeSharedPreferenceKey("dolphin_widescreen", systemId.dbname)
                 val isWidescreen = sharedPreferences.getBoolean(key, false) || sharedPreferences.getString(key, null) == "enabled"
@@ -117,14 +110,7 @@ class TouchScreenLayoutController(
                         else -> 4f / 3f
                     }
                 }
-                SystemID.N64 -> {
-                    val aspectKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-aspect", systemId.dbname)
-                    val current = sharedPreferences.getString(aspectKey, null)
-                    when (current) {
-                        "4:3" -> 4f / 3f
-                        else -> 16f / 9f
-                    }
-                }
+                SystemID.N64 -> 16f / 9f
                 SystemID.GAMECUBE, SystemID.WII -> {
                     val key = CoreVariablesManager.computeSharedPreferenceKey("dolphin_widescreen", systemId.dbname)
                     val isWidescreen = sharedPreferences.getBoolean(key, false) || sharedPreferences.getString(key, null) == "enabled"

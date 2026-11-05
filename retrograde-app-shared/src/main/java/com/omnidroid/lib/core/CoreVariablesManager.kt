@@ -20,8 +20,8 @@ class CoreVariablesManager(private val sharedPreferences: Lazy<SharedPreferences
 
         if (systemID == SystemID.N64) {
             coreVariablesMap["mupen64plus-GLideN64IniBehaviour"] = "early"
-            coreVariablesMap["mupen64plus-aspect"] = coreVariables.find { it.key == "mupen64plus-aspect" }?.value ?: "16:9 adjusted"
-            val res43 = coreVariablesMap["mupen64plus-43screensize"] ?: "640x480"
+            coreVariablesMap["mupen64plus-aspect"] = "16:9"
+            val res43 = coreVariablesMap["mupen64plus-43screensize"] ?: "320x240"
             coreVariablesMap["mupen64plus-43screensize"] = res43
             coreVariablesMap["mupen64plus-169screensize"] = mapN64To169Resolution(res43)
             coreVariablesMap["mupen64plus-cpucore"] = "dynamic_recompiler"

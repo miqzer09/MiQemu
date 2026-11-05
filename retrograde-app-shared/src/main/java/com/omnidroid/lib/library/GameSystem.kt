@@ -1027,9 +1027,9 @@ data class GameSystem(
                             defaultSettings =
                                 listOf(
                                     CoreVariable("mupen64plus-GLideN64IniBehaviour", "early"),
-                                    CoreVariable("mupen64plus-aspect", "16:9 adjusted"),
-                                    CoreVariable("mupen64plus-43screensize", "640x480"),
-                                    CoreVariable("mupen64plus-169screensize", "960x540"),
+                                    CoreVariable("mupen64plus-aspect", "16:9"),
+                                    CoreVariable("mupen64plus-43screensize", "320x240"),
+                                    CoreVariable("mupen64plus-169screensize", "640x360"),
                                     CoreVariable("mupen64plus-MSAA", "0"),
                                     CoreVariable("mupen64plus-FXAA", "0"),
                                     CoreVariable("mupen64plus-BilinearMode", "standard"),
