@@ -9,6 +9,8 @@ import androidx.work.WorkManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.google.android.material.color.DynamicColors
+import com.omnidroid.BuildConfig
+import timber.log.Timber
 import com.omnidroid.app.mobile.feature.settings.SettingsManager
 import com.omnidroid.app.shared.covers.CoverUtils
 import com.omnidroid.app.shared.covers.RawgCoverStore
@@ -51,6 +53,10 @@ class OmnidroidApplication : android.app.Application(), ImageLoaderFactory, Conf
     @SuppressLint("CheckResult")
     override fun onCreate() {
         super.onCreate()
+
+        if (BuildConfig.DEBUG && Timber.treeCount == 0) {
+            Timber.plant(Timber.DebugTree())
+        }
 
         // Initialize WorkManager with HiltWorkerFactory before App Startup enqueues any @HiltWorker.
         WorkManager.getInstance(this)

@@ -12,6 +12,7 @@ import com.omnidroid.R
 import com.omnidroid.app.shared.input.InputDeviceManager
 import com.omnidroid.app.shared.input.InputKey
 import com.omnidroid.app.shared.input.RetroKey
+import com.omnidroid.app.shared.input.inputclass.InputClassGamePad
 import com.omnidroid.app.shared.input.inputclass.getInputClass
 import com.omnidroid.app.shared.settings.ControllerConfigsManager
 import com.omnidroid.app.shared.settings.GameShortcut
@@ -202,7 +203,8 @@ class GameViewModelInput(
         keyCode: Int,
         event: KeyEvent,
     ): Boolean {
-        val accepted = InputKey(keyCode) in event.device.getInputClass().getInputKeys()
+        val accepted = InputKey(keyCode) in event.device.getInputClass().getInputKeys() ||
+            InputKey(keyCode) in InputClassGamePad.getInputKeys()
         if (accepted) {
             keyEventsFlow.tryEmit(event)
             return true
@@ -245,9 +247,14 @@ class GameViewModelInput(
                 // for digital systems (NES, SNES, etc.), pick the primary Gamepad (first), never
                 // a peripheral like Zapper/Lightgun.
                 val controllerId =
-                    findControllerId(supported, config)
-                        ?: config.libretroId
-                        ?: (if (config.hasAnalogStick) supported.lastOrNull()?.id else supported.firstOrNull()?.id)
+                    if (system.id == SystemID.NES) {
+                        1
+                    } else if (config.libretroId != null) {
+                        config.libretroId
+                    } else {
+                        findControllerId(supported, config)
+                            ?: (if (config.hasAnalogStick) supported.lastOrNull()?.id else supported.firstOrNull()?.id)
+                    }
                 if (controllerId != null) {
                     Timber.i("Controls setting $port to $controllerId (${config.libretroDescriptor})")
                     retroGameView.retroGameView?.setControllerType(port, controllerId)
@@ -268,13 +275,15 @@ class GameViewModelInput(
         supported: Array<Controller>,
         controllerConfig: ControllerConfig,
     ): Int? {
-        return supported
-            .firstOrNull { controller ->
-                sequenceOf(
-                    controller.id == controllerConfig.libretroId,
-                    controller.description == controllerConfig.libretroDescriptor,
-                ).any { it }
-            }?.id
+        if (controllerConfig.libretroId != null) {
+            val byId = supported.firstOrNull { it.id == controllerConfig.libretroId }?.id
+            if (byId != null) return byId
+        }
+        if (controllerConfig.libretroDescriptor != null) {
+            val byDesc = supported.firstOrNull { it.description == controllerConfig.libretroDescriptor }?.id
+            if (byDesc != null) return byDesc
+        }
+        return null
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -393,7 +402,7 @@ class GameViewModelInput(
             }
             .onCompletion { pressedKeys.clear() }
             .safeCollect { (device, action, keyCode) ->
-                val port = portMapperState.value(device)
+                val port = portMapperState.value(device) ?: 0
                 val bindings = bindingsState.value(device)
                 val rawBound = bindings[InputKey(keyCode)]?.keyCode ?: keyCode
                 val bindKeyCode = when (system.id) {
@@ -468,19 +477,18 @@ class GameViewModelInput(
                     }
                 }
 
-                port?.let {
-                    retroGameView.retroGameView?.sendKeyEvent(action, bindKeyCode, it)
-                }
+                retroGameView.retroGameView?.sendKeyEvent(action, bindKeyCode, port)
             }
     }
 
     private suspend fun initializeVirtualGamePadMotionsFlow() {
         motionEventsFlow
-            .mapNotNull { event ->
-                portMapperState.value(event.device)?.let { it to event }
+            .map { event ->
+                val port = portMapperState.value(event.device) ?: 0
+                port to event
             }
             .map { (port, event) ->
-                val axes = event.device.getInputClass().getAxesMap().entries
+                val axes = (event.device?.getInputClass() ?: InputClassGamePad).getAxesMap().entries
 
                 axes.map { (axis, button) ->
                     val action =
@@ -505,9 +513,8 @@ class GameViewModelInput(
         motionEventsFlow
             .onStart { Timber.i("MOTIONS subscribed") }
             .safeCollect { event ->
-                portMapperState.value(event.device)?.let {
-                    sendStickMotions(event, it)
-                }
+                val port = portMapperState.value(event.device) ?: 0
+                sendStickMotions(event, port)
             }
     }
 
