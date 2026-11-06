@@ -56,10 +56,13 @@ class TouchScreenLayoutController(
             }
             CoreID.PCSX_REARMED, CoreID.SWANSTATION -> {
                 val aspectKey = CoreVariablesManager.computeSharedPreferenceKey(PCSX_REARMED_ASPECT_RATIO_KEY, systemId.dbname)
+                val swanAspectKey = CoreVariablesManager.computeSharedPreferenceKey("swanstation_Display_AspectRatio", systemId.dbname)
                 val current = sharedPreferences.getString(aspectKey, null)
+                    ?: sharedPreferences.getString(swanAspectKey, null)
                 when (current) {
-                    "4:3" -> 4f / 3f
-                    else -> 16f / 9f
+                    "16:9" -> 16f / 9f
+                    "10:7" -> 10f / 7f
+                    else -> 4f / 3f
                 }
             }
             CoreID.SNES9X -> {
@@ -71,7 +74,14 @@ class TouchScreenLayoutController(
                     else -> 4f / 3f
                 }
             }
-            CoreID.MUPEN64_PLUS_NEXT -> 16f / 9f
+            CoreID.MUPEN64_PLUS_NEXT -> {
+                val aspectKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-aspect", systemId.dbname)
+                val current = sharedPreferences.getString(aspectKey, null)
+                when (current) {
+                    "16:9", "16:9 adjusted" -> 16f / 9f
+                    else -> 4f / 3f
+                }
+            }
             CoreID.DOLPHIN -> {
                 val key = CoreVariablesManager.computeSharedPreferenceKey("dolphin_widescreen", systemId.dbname)
                 val isWidescreen = sharedPreferences.getBoolean(key, false) || sharedPreferences.getString(key, null) == "enabled"
@@ -95,10 +105,13 @@ class TouchScreenLayoutController(
             else -> when (systemId) {
                 SystemID.PSX -> {
                     val aspectKey = CoreVariablesManager.computeSharedPreferenceKey(PCSX_REARMED_ASPECT_RATIO_KEY, systemId.dbname)
+                    val swanAspectKey = CoreVariablesManager.computeSharedPreferenceKey("swanstation_Display_AspectRatio", systemId.dbname)
                     val current = sharedPreferences.getString(aspectKey, null)
+                        ?: sharedPreferences.getString(swanAspectKey, null)
                     when (current) {
-                        "4:3" -> 4f / 3f
-                        else -> 16f / 9f
+                        "16:9" -> 16f / 9f
+                        "10:7" -> 10f / 7f
+                        else -> 4f / 3f
                     }
                 }
                 SystemID.SNES -> {
@@ -110,7 +123,14 @@ class TouchScreenLayoutController(
                         else -> 4f / 3f
                     }
                 }
-                SystemID.N64 -> 16f / 9f
+                SystemID.N64 -> {
+                    val aspectKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-aspect", systemId.dbname)
+                    val current = sharedPreferences.getString(aspectKey, null)
+                    when (current) {
+                        "16:9", "16:9 adjusted" -> 16f / 9f
+                        else -> 4f / 3f
+                    }
+                }
                 SystemID.GAMECUBE, SystemID.WII -> {
                     val key = CoreVariablesManager.computeSharedPreferenceKey("dolphin_widescreen", systemId.dbname)
                     val isWidescreen = sharedPreferences.getBoolean(key, false) || sharedPreferences.getString(key, null) == "enabled"

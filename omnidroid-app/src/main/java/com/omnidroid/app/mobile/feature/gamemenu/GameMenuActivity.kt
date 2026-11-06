@@ -4,6 +4,8 @@ package com.omnidroid.app.mobile.feature.gamemenu
 
 import android.content.Intent
 import android.os.Bundle
+import com.omnidroid.lib.preferences.SharedPreferencesHelper
+import com.omnidroid.lib.core.CoreVariablesManager
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.activity.SystemBarStyle
@@ -149,6 +151,9 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                 if (legacyFastForwardEnabled) 2 else 1,
             ) ?: 1
 
+        val game = intent.serializable<Game>(GameMenuContract.EXTRA_GAME)
+            ?: throw InvalidParameterException("Missing EXTRA_GAME")
+
         val gameMenuRequest =
             GameMenuRequest(
                 coreOptions =
@@ -159,9 +164,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     intent.serializable<Array<OmnidroidCoreOption>>(GameMenuContract.EXTRA_ADVANCED_CORE_OPTIONS)
                         ?.toList()
                         ?: throw InvalidParameterException("Missing EXTRA_ADVANCED_CORE_OPTIONS"),
-                game =
-                    intent.serializable<Game>(GameMenuContract.EXTRA_GAME)
-                        ?: throw InvalidParameterException("Missing EXTRA_GAME"),
+                game = game,
                 coreConfig =
                     intent.serializable<SystemCoreConfig>(GameMenuContract.EXTRA_SYSTEM_CORE_CONFIG)
                         ?: throw InvalidParameterException("Missing EXTRA_SYSTEM_CORE_CONFIG"),
@@ -175,12 +178,30 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                 currentDisk =
                     extras?.getInt(GameMenuContract.EXTRA_CURRENT_DISK, 0) ?: 0,
                 currentTiltConfiguration =
-                    intent.serializable<TiltConfiguration>(GameMenuContract.EXTRA_CURRENT_TILT_CONFIG)
+                    (if (game.systemId.equals("n64", ignoreCase = true)) {
+                        val sharedPrefs = SharedPreferencesHelper.getSharedPreferences(this)
+                        val tiltKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-tilt", "n64")
+                        when (sharedPrefs.getString(tiltKey, "disabled")?.lowercase()) {
+                            "analog" -> TiltConfiguration.Analog(1)
+                            "cross" -> TiltConfiguration.Cross(0)
+                            "buttons" -> TiltConfiguration.ButtonPair(KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R1)
+                            else -> null
+                        }
+                    } else null)
+                        ?: intent.serializable<TiltConfiguration>(GameMenuContract.EXTRA_CURRENT_TILT_CONFIG)
                         ?: TiltConfiguration.Disabled,
                 allTiltConfigurations =
                     intent.serializable<Array<TiltConfiguration>>(GameMenuContract.EXTRA_TILT_ALL_CONFIGS)
                         ?.toList()
-                        ?: emptyList(),
+                        ?.takeIf { it.isNotEmpty() }
+                        ?: if (game.systemId.equals("n64", ignoreCase = true)) {
+                            listOf(
+                                TiltConfiguration.Disabled,
+                                TiltConfiguration.Cross(0),
+                                TiltConfiguration.Analog(1),
+                                TiltConfiguration.ButtonPair(KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R1),
+                            )
+                        } else emptyList(),
             )
 
         setContent {
@@ -226,7 +247,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
             LaunchedEffect(panelState.currentState, panelState.targetState, panelState.isIdle) {
                 if (panelState.currentState) hasOpened = true
                 if (hasOpened && panelState.isIdle && !panelState.currentState && !panelState.targetState) {
-                    onResult(pendingResult)
+                    onResult(gameMenuRequest, pendingResult)
                 }
                 if (panelState.targetState && panelState.isIdle) {
                     delay(50)
@@ -356,7 +377,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                                                 navController,
                                                 gameMenuRequest,
                                                 onResult = { requestClose(it) },
-                                                saveSyncSupported = saveSyncManager.isSupported(),
+                                                saveSyncSupported = false,
                                             )
                                         }
                                         composable(GameMenuRoute.SAVE) {
@@ -474,9 +495,59 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         }
     }
 
-    private fun onResult(block: Intent.() -> Unit) {
+    private fun onResult(gameMenuRequest: GameMenuRequest, block: Intent.() -> Unit) {
         val resultIntent = Intent()
         resultIntent.block()
+        if (gameMenuRequest.game.systemId.equals("n64", ignoreCase = true)) {
+            val n64Bundle = Bundle()
+            val sharedPrefs = SharedPreferencesHelper.getSharedPreferences(this)
+            val dbName = "n64"
+
+            val tiltKey = CoreVariablesManager.computeSharedPreferenceKey("mupen64plus-tilt", dbName)
+            if (resultIntent.hasExtra(GameMenuContract.RESULT_CHANGE_TILT_CONFIG)) {
+                val tiltConfig = resultIntent.serializable<TiltConfiguration>(GameMenuContract.RESULT_CHANGE_TILT_CONFIG)
+                val tiltVal = when (tiltConfig) {
+                    is TiltConfiguration.Analog -> "analog"
+                    is TiltConfiguration.Cross -> "cross"
+                    is TiltConfiguration.ButtonPair -> "buttons"
+                    else -> "disabled"
+                }
+                sharedPrefs.edit().putString(tiltKey, tiltVal).apply()
+                n64Bundle.putString("mupen64plus-tilt", tiltVal)
+            } else {
+                val currentTiltVal = sharedPrefs.getString(tiltKey, "disabled") ?: "disabled"
+                val tiltConfig = when (currentTiltVal.lowercase()) {
+                    "analog" -> TiltConfiguration.Analog(1)
+                    "cross" -> TiltConfiguration.Cross(0)
+                    "buttons" -> TiltConfiguration.ButtonPair(KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R1)
+                    else -> TiltConfiguration.Disabled
+                }
+                resultIntent.putExtra(GameMenuContract.RESULT_CHANGE_TILT_CONFIG, tiltConfig)
+            }
+
+            val keys = listOf(
+                "mupen64plus-aspect",
+                "mupen64plus-43screensize",
+                "mupen64plus-CropMode",
+                "mupen64plus-MSAA",
+                "mupen64plus-BilinearMode",
+                "mupen64plus-FXAA",
+                "mupen64plus-MaxAnisotropy",
+                "mupen64plus-txEnhancementMode",
+                "mupen64plus-EnableHWLighting",
+                "mupen64plus-pak1",
+                "mupen64plus-pak2"
+            )
+            val allPrefs = sharedPrefs.all
+            for (k in keys) {
+                val prefKey = CoreVariablesManager.computeSharedPreferenceKey(k, dbName)
+                val rawVal = allPrefs[prefKey]
+                if (rawVal != null) {
+                    n64Bundle.putString(k, rawVal.toString())
+                }
+            }
+            resultIntent.putExtra("EXTRA_N64_SETTINGS", n64Bundle)
+        }
         setResult(RESULT_OK, resultIntent)
         finish()
         overridePendingTransition(0, 0)

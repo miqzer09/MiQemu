@@ -30,7 +30,7 @@
     <string name="setting_stella_crop_hoverscan">Crop horizontal overscan</string>
     <string name="setting_fceumm_overscan_h">Crop horizontal overscan</string>
     <string name="setting_fceumm_overscan_v">Crop vertical overscan</string>
-        <string name="setting_fceumm_nospritelimit">No sprite limit</string>
+    <string name="setting_fceumm_nospritelimit">No sprite limit</string>
     <string name="setting_fceumm_turbo_enable">Turbo buttons</string>
     <string name="setting_fceumm_turbo_delay">Turbo speed</string>
     <string name="value_fceumm_turbo_none">Disabled</string>
@@ -62,6 +62,11 @@
     <string name="setting_mupen64plus_BilinearMode">Bilinear mode</string>
     <string name="setting_mupen64plus_pak1">Player 1 Pak</string>
     <string name="setting_mupen64plus_pak2">Player 2 Pak</string>
+    <string name="setting_mupen64plus_anisotropy">Anisotropic filtering</string>
+    <string name="setting_mupen64plus_fxaa">FXAA anti-aliasing</string>
+    <string name="setting_mupen64plus_txfilter">Texture filter mode</string>
+    <string name="setting_mupen64plus_txenhancement">Texture enhancement</string>
+    <string name="setting_mupen64plus_lighting">Hardware per-pixel lighting</string>
     <string name="setting_pcsx_rearmed_aspect_ratio">Aspect ratio</string>
     <string name="setting_pcsx_rearmed_neon_enhancement_enable">Internal resolution (Upscaling)</string>
     <string name="setting_pcsx_rearmed_frameskip">Frameskip</string>
@@ -70,10 +75,38 @@
     <string name="setting_pcsx_rearmed_neon_enhancement_tex_adj_v2">Enhanced resolution texture alignment</string>
     <string name="setting_pcsx_rearmed_dithering">Dithering pattern</string>
     <string name="setting_pcsx_rearmed_rgb32_output">RGB32 color depth</string>
+    <string name="setting_pcsx_rearmed_show_overscan">Crop overscan</string>
+    <string name="setting_pcsx_rearmed_screen_centering">Screen centering</string>
+    <string name="setting_pcsx_rearmed_show_bios_bootlogo">Fast boot (BIOS logo)</string>
+    <string name="setting_pcsx_rearmed_spu_interpolation">Sound interpolation (SPU)</string>
+    <string name="value_pcsx_rearmed_spu_gaussian">Gaussian (Accurate PSX Hardware)</string>
+    <string name="value_pcsx_rearmed_spu_cubic">Cubic (Enhanced Hi-Fi)</string>
+    <string name="value_pcsx_rearmed_spu_simple">Simple (Linear / Fast)</string>
+    <string name="setting_pcsx_rearmed_spu_reverb">Sound reverb effects</string>
+    <string name="setting_pcsx_rearmed_neon_interlace_enable_v2">Progressive scan (Deinterlacing)</string>
+    <string name="setting_pcsx_rearmed_gpu_thread_rendering">Threaded GPU rendering</string>
+    <string name="setting_pcsx_rearmed_spu_thread">Async sound thread (SPU)</string>
+    <string name="setting_pcsx_rearmed_cd_readahead">CD-ROM audio read-ahead cache</string>
+    <string name="value_pcsx_rearmed_cd_1024">1024 sectors (Recommended)</string>
+    <string name="value_pcsx_rearmed_cd_512">512 sectors</string>
+    <string name="value_pcsx_rearmed_cd_2048">2048 sectors</string>
+    <string name="value_pcsx_rearmed_cd_0">Disabled</string>
+    <string name="setting_pcsx_rearmed_nocdaudio">Mute CD audio tracks</string>
+    <string name="setting_pcsx_rearmed_noxadecoding">Disable XA audio decoding</string>
+    <string name="setting_pcsx_rearmed_psxclock">Emulated CPU clock</string>
+    <string name="value_pcsx_rearmed_psxclock_70">70 MHz (DuckStation Smooth)</string>
+    <string name="value_pcsx_rearmed_psxclock_57">57 MHz (Underclock / Battery)</string>
+    <string name="value_pcsx_rearmed_psxclock_85">85 MHz (Overclock)</string>
+    <string name="value_pcsx_rearmed_psxclock_100">100 MHz (Max Speed)</string>
     <string name="value_pcsx_rearmed_aspect_4_3">4:3 (Original)</string>
     <string name="value_pcsx_rearmed_aspect_16_9">16:9 (Widescreen)</string>
+    <string name="value_pcsx_rearmed_aspect_10_7">10:7 (PAR)</string>
     <string name="value_pcsx_rearmed_res_1x">1x Native (320x240)</string>
     <string name="value_pcsx_rearmed_res_2x">2x Enhanced (640x480)</string>
+    <string name="value_overscan_crop">Crop overscan (Clean 4:3)</string>
+    <string name="value_overscan_show">Show overscan (Borders)</string>
+    <string name="value_bootlogo_disabled">Fast boot (Skip logo)</string>
+    <string name="value_bootlogo_enabled">Show BIOS logo</string>
     <string name="value_dithering_disabled">Disabled</string>
     <string name="value_dithering_enabled">Enabled</string>
     <string name="value_dithering_force">Force</string>
@@ -100,6 +133,10 @@
     <string name="value_filter_nearest">Nearest</string>
     <string name="value_filter_bilinear">Bilinear</string>
     <string name="value_filter_xbr">xBR</string>
+    <string name="setting_swanstation_crop_mode">Crop Mode</string>
+    <string name="value_swanstation_crop_overscan">Overscan</string>
+    <string name="value_swanstation_crop_borders">Borders</string>
+    <string name="value_swanstation_crop_none">None</string>
     <string name="value_swanstation_enabled">Enabled</string>
     <string name="value_swanstation_disabled">Disabled</string>
 
@@ -255,17 +292,24 @@
     <string name="value_genesis_plus_gx_overscan_leftright">Left/Right</string>
     <string name="value_genesis_plus_gx_overscan_full">Full</string>
 
-    <string name="value_mupen64plus_aspect_4_3">4:3</string>
+    <string name="value_mupen64plus_aspect_4_3">4:3 (Original)</string>
     <string name="value_mupen64plus_aspect_16_9">16:9</string>
     <string name="value_mupen64plus_aspect_16_9_adjusted">16:9 (Adjusted)</string>
 
-    <string name="value_mupen64plus_res_320x240">1x Native (320x240)</string>
-    <string name="value_mupen64plus_res_640x480">2x (640x480)</string>
-    <string name="value_mupen64plus_res_960x720">3x (960x720)</string>
-    <string name="value_mupen64plus_res_1280x960">4x (1280x960)</string>
-    <string name="value_mupen64plus_res_1600x1200">5x (1600x1200)</string>
-    <string name="value_mupen64plus_res_1920x1440">6x (1920x1440)</string>
-    <string name="value_mupen64plus_res_2560x1920">8x (2560x1920)</string>
+    <string name="setting_mupen64plus_tilt">Tilt Sensor</string>
+    <string name="value_mupen64plus_tilt_disabled">Disabled</string>
+    <string name="value_mupen64plus_tilt_analog">Left Analog</string>
+    <string name="value_mupen64plus_tilt_cross">D-Pad</string>
+    <string name="value_mupen64plus_tilt_buttons">L / R Buttons</string>
+
+    <string name="value_mupen64plus_res_640x480">640x480 (2x HD)</string>
+    <string name="value_mupen64plus_res_960x720">960x720 (720p HD)</string>
+    <string name="value_mupen64plus_res_1440x1080">1440x1080 (1080p Full HD)</string>
+    <string name="value_mupen64plus_res_1280x960">1280x960 (4x HD)</string>
+    <string name="value_mupen64plus_res_1600x1200">1600x1200 (5x HD)</string>
+    <string name="value_mupen64plus_res_1920x1440">1920x1440 (1440p 2K HD)</string>
+    <string name="value_mupen64plus_res_2560x1920">2560x1920 (8x HD)</string>
+    <string name="value_mupen64plus_res_320x240">320x240 (1x Native)</string>
 
     <string name="value_mupen64plus_crop_mode_auto">Auto (Recommended)</string>
     <string name="value_mupen64plus_crop_mode_off">Off</string>
@@ -289,6 +333,30 @@
 
     <string name="value_mupen64plus_mupen64plus_pak2_none">None</string>
     <string name="value_mupen64plus_mupen64plus_pak2_rumble">Rumble</string>
+
+    <string name="value_mupen64plus_anisotropy_0">Off</string>
+    <string name="value_mupen64plus_anisotropy_2">2x</string>
+    <string name="value_mupen64plus_anisotropy_4">4x</string>
+    <string name="value_mupen64plus_anisotropy_8">8x (Accurate)</string>
+    <string name="value_mupen64plus_anisotropy_16">16x (Sharp)</string>
+
+    <string name="value_mupen64plus_fxaa_0">Off</string>
+    <string name="value_mupen64plus_fxaa_1">On (Smooth)</string>
+
+    <string name="value_mupen64plus_txfilter_none">None</string>
+    <string name="value_mupen64plus_txfilter_smooth1">Smooth 1</string>
+    <string name="value_mupen64plus_txfilter_smooth2">Smooth 2</string>
+    <string name="value_mupen64plus_txfilter_sharp1">Sharp 1</string>
+    <string name="value_mupen64plus_txfilter_sharp2">Sharp 2</string>
+
+    <string name="value_mupen64plus_txenhancement_none">None</string>
+    <string name="value_mupen64plus_txenhancement_hq2x">HQ2X</string>
+    <string name="value_mupen64plus_txenhancement_hq4x">HQ4X (Sharp)</string>
+    <string name="value_mupen64plus_txenhancement_2xbrz">2xBRZ</string>
+    <string name="value_mupen64plus_txenhancement_4xbrz">4xBRZ (Smooth)</string>
+
+    <string name="value_mupen64plus_lighting_true">Enabled (Accurate)</string>
+    <string name="value_mupen64plus_lighting_false">Disabled</string>
 
     <string name="value_melonds_screen_layout_topbottom">Top - Bottom</string>
     <string name="value_melonds_screen_layout_leftright">Left - Right</string>

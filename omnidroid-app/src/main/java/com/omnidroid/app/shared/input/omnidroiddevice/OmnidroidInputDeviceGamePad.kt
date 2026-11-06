@@ -21,21 +21,34 @@ class OmnidroidInputDeviceGamePad(private val device: InputDevice) : OmnidroidIn
                     InputKey(it.keyCode) to getDefaultBindingForKey(device, it)
                 }
 
-        // Follows mupen64plus-ae's [Xbox] controller profile (assets/mupen64plus_data/profiles/controller.cfg):
-        // N64 A on the bottom face button (6:99 style: N64 controls live on A/X), shoulders on L1/R1,
-        // triggers as L2/R2. The RetroPad A/X ids are only consumed by the core as C-buttons while
-        // the C-mode modifier is held, so the remaining face buttons get real N64 functions:
-        // B = Z trigger (same as the left-trigger axis path) and Y = C-button mode modifier.
+        // Standard Xbox-to-RetroPad mapping:
+        // Physical Xbox controller face buttons:
+        //   Y (top)
+        // X (left)   B (right)
+        //   A (bottom)
+        //
+        // PlayStation controller face buttons:
+        //   Triangle (top)
+        // Square (left)   Circle (right)
+        //   Cross (bottom)
+        //
+        // In Libretro / libretrodroid:
+        // KEYCODE_BUTTON_B -> RetroPad B = PSX Cross (bottom)
+        // KEYCODE_BUTTON_A -> RetroPad A = PSX Circle (right)
+        // KEYCODE_BUTTON_Y -> RetroPad Y = PSX Square (left)
+        // KEYCODE_BUTTON_X -> RetroPad X = PSX Triangle (top)
+        //
+        // Remap physical Xbox buttons so positions match 1:1:
+        // Xbox A (bottom) -> KEYCODE_BUTTON_B (PSX Cross)
+        // Xbox B (right)  -> KEYCODE_BUTTON_A (PSX Circle)
+        // Xbox X (left)   -> KEYCODE_BUTTON_Y (PSX Square)
+        // Xbox Y (top)    -> KEYCODE_BUTTON_X (PSX Triangle)
         val defaultOverride =
             bindingsOf(
-                // Bottom face button -> RetroPad B = N64 A.
                 KeyEvent.KEYCODE_BUTTON_A to KeyEvent.KEYCODE_BUTTON_B,
-                // Left face button -> RetroPad Y = N64 B (mupen64plus-ae [Xbox] 6:99 pattern).
+                KeyEvent.KEYCODE_BUTTON_B to KeyEvent.KEYCODE_BUTTON_A,
                 KeyEvent.KEYCODE_BUTTON_X to KeyEvent.KEYCODE_BUTTON_Y,
-                // Right face button -> RetroPad L2 = N64 Z.
-                KeyEvent.KEYCODE_BUTTON_B to KeyEvent.KEYCODE_BUTTON_L2,
-                // Top face button -> RetroPad R2 = C-buttons mode modifier.
-                KeyEvent.KEYCODE_BUTTON_Y to KeyEvent.KEYCODE_BUTTON_R2,
+                KeyEvent.KEYCODE_BUTTON_Y to KeyEvent.KEYCODE_BUTTON_X,
             )
 
         return allAvailableInputs + defaultOverride

@@ -28,8 +28,6 @@ import com.omnidroid.app.utils.android.settings.OmnidroidSettingsList
 import com.omnidroid.app.utils.android.settings.OmnidroidSettingsMenuLink
 import com.omnidroid.app.utils.android.settings.OmnidroidSettingsPage
 import com.omnidroid.app.utils.android.settings.OmnidroidSettingsSwitch
-import com.omnidroid.lib.savesync.GameCloudSyncOverride
-import com.omnidroid.lib.savesync.GameCloudSyncPreferences
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
@@ -212,28 +210,6 @@ fun GameMenuHomeScreen(
                     onResult { putExtra(GameMenuContract.RESULT_EDIT_TOUCH_CONTROLS, true) }
                 },
             )
-
-            if (saveSyncSupported) {
-                val context = LocalContext.current
-                val prefs = remember { GameCloudSyncPreferences(context) }
-                val current = prefs.getOverride(gameMenuRequest.game.id)
-                val items =
-                    listOf(
-                        stringResource(R.string.game_cloud_save_inherit),
-                        stringResource(R.string.game_cloud_save_always),
-                        stringResource(R.string.game_cloud_save_never),
-                    )
-                val values = GameCloudSyncOverride.values()
-                OmnidroidSettingsList(
-                    title = { Text(text = stringResource(id = R.string.game_cloud_save)) },
-                    items = items,
-                    useSelectedValueAsSubtitle = true,
-                    state = rememberMemoryIntSettingState(values.indexOf(current).coerceAtLeast(0)),
-                    onItemSelected = { index, _ ->
-                        prefs.setOverride(gameMenuRequest.game.id, values[index])
-                    },
-                )
-            }
 
             val hasControllers = gameMenuRequest.coreConfig.controllerConfigs.values.any { it.size >= 2 }
             if (gameMenuRequest.advancedCoreOptions.isNotEmpty() || gameMenuRequest.coreOptions.isNotEmpty() || hasControllers) {

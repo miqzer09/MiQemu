@@ -26,6 +26,7 @@ import com.omnidroid.common.kotlin.zipOnKeys
 import com.omnidroid.lib.controller.ControllerConfig
 import com.omnidroid.lib.library.GameSystem
 import com.omnidroid.lib.library.SystemCoreConfig
+import com.omnidroid.lib.library.SystemID
 import com.swordfish.libretrodroid.Controller
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.GLRetroView.Companion.MOTION_SOURCE_ANALOG_LEFT
@@ -394,7 +395,27 @@ class GameViewModelInput(
             .safeCollect { (device, action, keyCode) ->
                 val port = portMapperState.value(device)
                 val bindings = bindingsState.value(device)
-                val bindKeyCode = bindings[InputKey(keyCode)]?.keyCode ?: keyCode
+                val rawBound = bindings[InputKey(keyCode)]?.keyCode ?: keyCode
+                val bindKeyCode = when (system.id) {
+                    SystemID.N64 -> when (keyCode) {
+                        KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_L2
+                        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_R2
+                        else -> rawBound
+                    }
+                    SystemID.PSX -> when (keyCode) {
+                        // Xbox face buttons match PlayStation layout:
+                        // Xbox A (bottom) -> RetroPad B = PSX Cross
+                        // Xbox B (right)  -> RetroPad A = PSX Circle
+                        // Xbox X (left)   -> RetroPad Y = PSX Square
+                        // Xbox Y (top)    -> RetroPad X = PSX Triangle
+                        KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
+                        KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
+                        KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
+                        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
+                        else -> rawBound
+                    }
+                    else -> rawBound
+                }
 
                 if (port == 0) {
                     if ((bindKeyCode == KeyEvent.KEYCODE_BUTTON_MODE || bindKeyCode == KeyEvent.KEYCODE_MENU) && action == KeyEvent.ACTION_DOWN) {

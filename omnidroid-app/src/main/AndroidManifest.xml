@@ -164,11 +164,6 @@
             android:authorities="${applicationId}.androidx-startup"
             tools:node="remove" />
 
-            <service
-            android:name="paulscode.android.mupen64plusae.jni.CoreService"
-            android:process=":game"
-            android:exported="false"
-            tools:replace="android:process" />
     </application>
 
 </manifest>

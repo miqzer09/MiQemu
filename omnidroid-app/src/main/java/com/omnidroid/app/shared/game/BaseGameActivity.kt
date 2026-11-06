@@ -590,6 +590,11 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             activityOptions: android.os.Bundle? = null,
             isExternalLaunch: Boolean = false,
         ) {
+            if (game.systemId.equals("n64", ignoreCase = true)) {
+                if (Mupen64PlusHelper.launchGame(activity, game, activityOptions, isExternalLaunch, systemCoreConfig)) {
+                    return
+                }
+            }
             val intent =
                 Intent(activity, GameActivity::class.java).apply {
                     val uri = Uri.parse(game.fileUri)

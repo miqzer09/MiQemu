@@ -1108,6 +1108,10 @@ data class GameSystem(
                                                 "16:9",
                                                 R.string.value_pcsx_rearmed_aspect_16_9,
                                             ),
+                                            ExposedSetting.Value(
+                                                "10:7",
+                                                R.string.value_pcsx_rearmed_aspect_10_7,
+                                            ),
                                         ),
                                     ),
                                     ExposedSetting(
@@ -1123,6 +1127,60 @@ data class GameSystem(
                                                 R.string.value_pcsx_rearmed_res_1x,
                                             ),
                                         ),
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_show_overscan",
+                                        R.string.setting_pcsx_rearmed_show_overscan,
+                                        arrayListOf(
+                                            ExposedSetting.Value(
+                                                "disabled",
+                                                R.string.value_overscan_crop,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "enabled",
+                                                R.string.value_overscan_show,
+                                            ),
+                                        ),
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_dithering",
+                                        R.string.setting_pcsx_rearmed_dithering,
+                                        arrayListOf(
+                                            ExposedSetting.Value(
+                                                "disabled",
+                                                R.string.value_dithering_disabled,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "enabled",
+                                                R.string.value_dithering_enabled,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "force",
+                                                R.string.value_dithering_force,
+                                            ),
+                                        ),
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_spu_interpolation",
+                                        R.string.setting_pcsx_rearmed_spu_interpolation,
+                                        arrayListOf(
+                                            ExposedSetting.Value(
+                                                "gaussian",
+                                                R.string.value_pcsx_rearmed_spu_gaussian,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "cubic",
+                                                R.string.value_pcsx_rearmed_spu_cubic,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "simple",
+                                                R.string.value_pcsx_rearmed_spu_simple,
+                                            ),
+                                        ),
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_spu_reverb",
+                                        R.string.setting_pcsx_rearmed_spu_reverb,
                                     ),
                                     ExposedSetting(
                                         "pcsx_rearmed_frameskip",
@@ -1144,41 +1202,108 @@ data class GameSystem(
                                         R.string.setting_pcsx_rearmed_neon_enhancement_tex_adj_v2,
                                     ),
                                     ExposedSetting(
-                                        "pcsx_rearmed_dithering",
-                                        R.string.setting_pcsx_rearmed_dithering,
-                                        arrayListOf(
-                                            ExposedSetting.Value(
-                                                "disabled",
-                                                R.string.value_dithering_disabled,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "enabled",
-                                                R.string.value_dithering_enabled,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "force",
-                                                R.string.value_dithering_force,
-                                            ),
-                                        ),
+                                        "pcsx_rearmed_neon_interlace_enable_v2",
+                                        R.string.setting_pcsx_rearmed_neon_interlace_enable_v2,
                                     ),
                                     ExposedSetting(
                                         "pcsx_rearmed_rgb32_output",
                                         R.string.setting_pcsx_rearmed_rgb32_output,
                                     ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_screen_centering",
+                                        R.string.setting_pcsx_rearmed_screen_centering,
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_gpu_thread_rendering",
+                                        R.string.setting_pcsx_rearmed_gpu_thread_rendering,
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_spu_thread",
+                                        R.string.setting_pcsx_rearmed_spu_thread,
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_cd_readahead",
+                                        R.string.setting_pcsx_rearmed_cd_readahead,
+                                        arrayListOf(
+                                            ExposedSetting.Value(
+                                                "1024",
+                                                R.string.value_pcsx_rearmed_cd_1024,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "512",
+                                                R.string.value_pcsx_rearmed_cd_512,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "2048",
+                                                R.string.value_pcsx_rearmed_cd_2048,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "0",
+                                                R.string.value_pcsx_rearmed_cd_0,
+                                            ),
+                                        ),
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_nocdaudio",
+                                        R.string.setting_pcsx_rearmed_nocdaudio,
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_noxadecoding",
+                                        R.string.setting_pcsx_rearmed_noxadecoding,
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_psxclock",
+                                        R.string.setting_pcsx_rearmed_psxclock,
+                                        arrayListOf(
+                                            ExposedSetting.Value(
+                                                "70",
+                                                R.string.value_pcsx_rearmed_psxclock_70,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "57",
+                                                R.string.value_pcsx_rearmed_psxclock_57,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "85",
+                                                R.string.value_pcsx_rearmed_psxclock_85,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "100",
+                                                R.string.value_pcsx_rearmed_psxclock_100,
+                                            ),
+                                        ),
+                                    ),
+                                    ExposedSetting(
+                                        "pcsx_rearmed_show_bios_bootlogo",
+                                        R.string.setting_pcsx_rearmed_show_bios_bootlogo,
+                                        arrayListOf(
+                                            ExposedSetting.Value(
+                                                "disabled",
+                                                R.string.value_bootlogo_disabled,
+                                            ),
+                                            ExposedSetting.Value(
+                                                "enabled",
+                                                R.string.value_bootlogo_enabled,
+                                            ),
+                                        ),
+                                    ),
                                 ),
                             defaultSettings =
                                 listOf(
                                     CoreVariable("pcsx_rearmed_drc", "enabled"),
-                                    CoreVariable("pcsx_rearmed_aspect_ratio", "16:9"),
+                                    CoreVariable("pcsx_rearmed_aspect_ratio", "4:3"),
                                     CoreVariable("pcsx_rearmed_neon_enhancement_enable", "enabled"),
                                     CoreVariable("pcsx_rearmed_neon_enhancement_no_main", "disabled"),
                                     CoreVariable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "enabled"),
                                     CoreVariable("pcsx_rearmed_neon_interlace_enable_v2", "disabled"),
+                                    CoreVariable("pcsx_rearmed_show_overscan", "disabled"),
                                     CoreVariable("pcsx_rearmed_dithering", "disabled"),
                                     CoreVariable("pcsx_rearmed_rgb32_output", "enabled"),
+                                    CoreVariable("pcsx_rearmed_screen_centering", "enabled"),
+                                    CoreVariable("pcsx_rearmed_show_bios_bootlogo", "disabled"),
                                     CoreVariable("pcsx_rearmed_spu_thread", "enabled"),
                                     CoreVariable("pcsx_rearmed_gpu_thread_rendering", "enabled"),
-                                    CoreVariable("pcsx_rearmed_spu_interpolation", "cubic"),
+                                    CoreVariable("pcsx_rearmed_spu_interpolation", "gaussian"),
                                     CoreVariable("pcsx_rearmed_spu_reverb", "enabled"),
                                     CoreVariable("pcsx_rearmed_cd_readahead", "1024"),
                                     CoreVariable("pcsx_rearmed_psxclock", "70"),

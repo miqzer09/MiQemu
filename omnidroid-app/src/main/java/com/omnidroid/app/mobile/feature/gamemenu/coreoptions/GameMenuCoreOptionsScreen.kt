@@ -136,7 +136,7 @@ private fun CoreOptions(
                 state =
                     indexPreferenceState(
                         CoreVariablesManager.computeSharedPreferenceKey(coreOption.getKey(), systemID),
-                        entryValues.first(),
+                        coreOption.getCurrentValue(),
                         entryValues,
                     ),
             )

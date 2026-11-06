@@ -103,7 +103,7 @@ android {
         jniLibs {
             // Stripping created issues with ppsspp; narrow to only ppsspp
             keepDebugSymbols += setOf("*/*/libppsspp_libretro_android.so")
-            pickFirsts += setOf("**/liblibretrodroid.so", "**/libc++_shared.so")
+            pickFirsts += setOf("**/liblibretrodroid.so", "**/libc++_shared.so", "**/libjnidispatch.so")
             useLegacyPackaging = true
         }
         resources {
@@ -319,6 +319,17 @@ dependencies {
     implementation(deps.libs.composeSettings.uiTilesExtended)
     implementation(deps.libs.composeSettings.diskStorage)
     implementation(deps.libs.composeSettings.memoryStorage)
+
+    // Mupen64Plus-AE standalone emulator dependencies
+    implementation("org.apache.commons:commons-lang3:3.18.0")
+    implementation("org.apache.commons:commons-text:1.14.0")
+    implementation("org.apache.commons:commons-io:1.3.2")
+    implementation("org.apache.commons:commons-compress:1.28.0")
+    implementation("org.tukaani:xz:1.10")
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
+    implementation("net.java.dev.jna:jna-platform:5.17.0") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
 
     if (findProject(":libretrodroid") != null) {
         implementation(project(":libretrodroid"))
