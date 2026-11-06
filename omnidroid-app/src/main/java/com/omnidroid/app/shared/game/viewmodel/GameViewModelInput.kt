@@ -240,12 +240,14 @@ class GameViewModelInput(
             val config = controllers[port]
             if (config != null) {
                 // Never leave a port on the library default: when the system config defines no
-                // matching id/descriptor (N64 does), fall back to the most capable supported
-                // controller class instead of skipping setControllerType for this port.
+                // matching id/descriptor, fall back to the appropriate supported controller class.
+                // For analog systems (N64, DualShock), pick the analog pad (conventionally last);
+                // for digital systems (NES, SNES, etc.), pick the primary Gamepad (first), never
+                // a peripheral like Zapper/Lightgun.
                 val controllerId =
                     findControllerId(supported, config)
                         ?: config.libretroId
-                        ?: supported.lastOrNull()?.id
+                        ?: (if (config.hasAnalogStick) supported.lastOrNull()?.id else supported.firstOrNull()?.id)
                 if (controllerId != null) {
                     Timber.i("Controls setting $port to $controllerId (${config.libretroDescriptor})")
                     retroGameView.retroGameView?.setControllerType(port, controllerId)
@@ -254,12 +256,10 @@ class GameViewModelInput(
                 Timber.i("Controls disconnecting unused port $port")
                 retroGameView.retroGameView?.setControllerType(port, 0)
             } else {
-                // Port 0 has no per-system controller config: never leave it on the library
-                // default, which may lack the analog device the core needs for sticks. Pick the
-                // most capable class (conventionally the last entry, the analog-capable pad).
-                val fallbackId = supported.lastOrNull()?.id
+                // Port 0 has no per-system controller config.
+                val fallbackId = supported.firstOrNull()?.id ?: 1
                 Timber.i("Controls fallback port 0 to $fallbackId")
-                fallbackId?.let { retroGameView.retroGameView?.setControllerType(port, it) }
+                fallbackId.let { retroGameView.retroGameView?.setControllerType(port, it) }
             }
         }
     }
@@ -408,6 +408,18 @@ class GameViewModelInput(
                         // Xbox B (right)  -> RetroPad A = PSX Circle
                         // Xbox X (left)   -> RetroPad Y = PSX Square
                         // Xbox Y (top)    -> RetroPad X = PSX Triangle
+                        KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
+                        KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
+                        KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
+                        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
+                        else -> rawBound
+                    }
+                    SystemID.NES -> when (keyCode) {
+                        // Xbox face buttons for NES (X and Y are Turbo):
+                        // Xbox A (bottom) -> RetroPad B = NES B (normal)
+                        // Xbox B (right)  -> RetroPad A = NES A (normal)
+                        // Xbox X (left)   -> RetroPad Y = NES Turbo B
+                        // Xbox Y (top)    -> RetroPad X = NES Turbo A
                         KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
                         KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
                         KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y

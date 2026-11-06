@@ -32,6 +32,8 @@ object ControllerConfigs {
             R.string.controller_default,
             TouchControllerID.NES,
             mergeDPADAndLeftStickEvents = true,
+            libretroDescriptor = "Gamepad",
+            libretroId = 513,
             tiltConfigurations =
                 listOf(
                     TILT_CONFIGURATION_DISABLED,
