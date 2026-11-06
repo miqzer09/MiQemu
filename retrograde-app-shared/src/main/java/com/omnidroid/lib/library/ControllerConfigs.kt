@@ -46,6 +46,7 @@ object ControllerConfigs {
             R.string.controller_default,
             TouchControllerID.SNES,
             mergeDPADAndLeftStickEvents = true,
+            libretroId = 1,
             tiltConfigurations =
                 listOf(
                     TILT_CONFIGURATION_DISABLED,

@@ -247,7 +247,7 @@ class GameViewModelInput(
                 // for digital systems (NES, SNES, etc.), pick the primary Gamepad (first), never
                 // a peripheral like Zapper/Lightgun.
                 val controllerId =
-                    if (system.id == SystemID.NES) {
+                    if (system.id == SystemID.NES || system.id == SystemID.SNES) {
                         1
                     } else if (config.libretroId != null) {
                         config.libretroId
@@ -389,6 +389,58 @@ class GameViewModelInput(
             .safeCollect { shortcutsState.value = it }
     }
 
+    private fun remapKeyForSystem(systemId: SystemID, keyCode: Int, defaultKeyCode: Int): Int {
+        return when (systemId) {
+            SystemID.N64 -> when (keyCode) {
+                KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_L2
+                KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_R2
+                else -> defaultKeyCode
+            }
+            SystemID.PSX -> when (keyCode) {
+                // Xbox face buttons match PlayStation layout:
+                // Xbox A (bottom) -> RetroPad B = PSX Cross
+                // Xbox B (right)  -> RetroPad A = PSX Circle
+                // Xbox X (left)   -> RetroPad Y = PSX Square
+                // Xbox Y (top)    -> RetroPad X = PSX Triangle
+                KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
+                KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
+                KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
+                KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
+                else -> defaultKeyCode
+            }
+            SystemID.NES -> when (keyCode) {
+                // Xbox face buttons for NES (X and Y are Turbo):
+                // Xbox A (bottom) -> RetroPad B = NES B (normal action)
+                // Xbox B (right)  -> RetroPad A = NES A (normal jump)
+                // Xbox X (left)   -> RetroPad Y = NES Turbo B
+                // Xbox Y (top)    -> RetroPad X = NES Turbo A
+                KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
+                KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
+                KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
+                KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
+                else -> defaultKeyCode
+            }
+            SystemID.SNES -> when (keyCode) {
+                // Xbox face buttons for SNES (matched to physical diamond position):
+                // Xbox A (bottom) -> RetroPad B = SNES B (bottom: Jump / Cancel)
+                // Xbox B (right)  -> RetroPad A = SNES A (right: Spin Jump / Confirm)
+                // Xbox X (left)   -> RetroPad Y = SNES Y (left: Run / Attack)
+                // Xbox Y (top)    -> RetroPad X = SNES X (top: Item / Secondary)
+                // Shoulders / Triggers:
+                // Xbox LT -> SNES L (mirrors LB)
+                // Xbox RT -> SNES R (mirrors RB)
+                KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
+                KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
+                KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
+                KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
+                KeyEvent.KEYCODE_BUTTON_L2 -> KeyEvent.KEYCODE_BUTTON_L1
+                KeyEvent.KEYCODE_BUTTON_R2 -> KeyEvent.KEYCODE_BUTTON_R1
+                else -> defaultKeyCode
+            }
+            else -> defaultKeyCode
+        }
+    }
+
     private suspend fun initializeGamePadKeysFlow() {
         val pressedKeys = mutableSetOf<Int>()
 
@@ -405,38 +457,7 @@ class GameViewModelInput(
                 val port = portMapperState.value(device) ?: 0
                 val bindings = bindingsState.value(device)
                 val rawBound = bindings[InputKey(keyCode)]?.keyCode ?: keyCode
-                val bindKeyCode = when (system.id) {
-                    SystemID.N64 -> when (keyCode) {
-                        KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_L2
-                        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_R2
-                        else -> rawBound
-                    }
-                    SystemID.PSX -> when (keyCode) {
-                        // Xbox face buttons match PlayStation layout:
-                        // Xbox A (bottom) -> RetroPad B = PSX Cross
-                        // Xbox B (right)  -> RetroPad A = PSX Circle
-                        // Xbox X (left)   -> RetroPad Y = PSX Square
-                        // Xbox Y (top)    -> RetroPad X = PSX Triangle
-                        KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
-                        KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
-                        KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
-                        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
-                        else -> rawBound
-                    }
-                    SystemID.NES -> when (keyCode) {
-                        // Xbox face buttons for NES (X and Y are Turbo):
-                        // Xbox A (bottom) -> RetroPad B = NES B (normal)
-                        // Xbox B (right)  -> RetroPad A = NES A (normal)
-                        // Xbox X (left)   -> RetroPad Y = NES Turbo B
-                        // Xbox Y (top)    -> RetroPad X = NES Turbo A
-                        KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
-                        KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
-                        KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
-                        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
-                        else -> rawBound
-                    }
-                    else -> rawBound
-                }
+                val bindKeyCode = remapKeyForSystem(system.id, keyCode, rawBound)
 
                 if (port == 0) {
                     if ((bindKeyCode == KeyEvent.KEYCODE_BUTTON_MODE || bindKeyCode == KeyEvent.KEYCODE_MENU) && action == KeyEvent.ACTION_DOWN) {
